@@ -6,6 +6,7 @@ import { EventCard } from "@/components/EventCard";
 import { CalendarView } from "@/components/CalendarView";
 import { Filters, type FilterState } from "@/components/Filters";
 import { TipModal } from "@/components/TipModal";
+import { UndoToast, type ToastState } from "@/components/UndoToast";
 
 function todayIso(): string {
   const d = new Date();
@@ -41,6 +42,13 @@ export default function Home() {
   const [refreshing, setRefreshing] = useState(false);
   const [refreshReport, setRefreshReport] = useState<string | null>(null);
   const [tipOpen, setTipOpen] = useState(false);
+  const [toast, setToast] = useState<ToastState>(null);
+
+  function showToast(message: string, onUndo: () => void | Promise<void>) {
+    // New id forces the UndoToast effect to reset the dismiss timer when
+    // a second negative action happens before the first toast has expired.
+    setToast({ message, onUndo, id: Date.now() });
+  }
 
   const query = useMemo(() => {
     const sp = new URLSearchParams();
@@ -188,6 +196,7 @@ export default function Home() {
       )}
 
       <TipModal open={tipOpen} onClose={() => setTipOpen(false)} onSaved={load} />
+      <UndoToast toast={toast} onDismiss={() => setToast(null)} />
 
 
       <div className="grid md:grid-cols-[280px_1fr] gap-4">
@@ -215,7 +224,12 @@ export default function Home() {
                   </div>
                 )}
                 {visible.map((e) => (
-                  <EventCard key={e.id} event={e} onChange={load} />
+                  <EventCard
+                    key={e.id}
+                    event={e}
+                    onChange={load}
+                    onShowToast={showToast}
+                  />
                 ))}
               </div>
             </>

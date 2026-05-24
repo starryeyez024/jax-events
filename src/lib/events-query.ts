@@ -52,17 +52,22 @@ export function queryEvents(db: Database.Database, filters: EventFilters): Event
   const where: string[] = [];
   const params: Record<string, unknown> = {};
 
-  // Evergreen items (is_recurring=1) need overlap semantics, not point-in-time:
-  //   - If the event has an ends_at, show it when its [starts_at, ends_at]
-  //     overlaps the filter window (i.e. you CAN actually attend it during
-  //     that window — a Cummer exhibition running Mar–Aug should appear in
-  //     a May 22–25 search).
-  //   - If ends_at is null (a park, the catch-all venue entry), it's truly
-  //     always-on — always show within the date filter.
-  // The 'includeRecurring=0' filter is still the kill-switch.
+  // Three classes of "starts before the window but is still relevant":
+  //   (a) Evergreen with no ends_at — always-on item (a park, a venue stub).
+  //   (b) Anything with an ends_at that extends to or past 'from' — covers
+  //       both evergreen exhibitions (Cummer show running Mar–Aug) AND
+  //       multi-day one-offs like the Jacksonville Jazz Festival (May 21–25
+  //       should appear in a May 22–25 search).
+  //   (c) Anything whose starts_at is on or after 'from' — the normal case.
+  // The 'includeRecurring=0' filter is still the kill-switch for (a)/(b)
+  // when the event is flagged as recurring.
   if (filters.from) {
     where.push(
-      "((e.is_recurring = 1 AND (e.ends_at IS NULL OR e.ends_at >= @from)) OR e.starts_at >= @from)"
+      `(
+         (e.is_recurring = 1 AND e.ends_at IS NULL)
+         OR (e.ends_at IS NOT NULL AND e.ends_at >= @from)
+         OR e.starts_at >= @from
+       )`
     );
     params.from = localDateToIso(filters.from, "start");
   }

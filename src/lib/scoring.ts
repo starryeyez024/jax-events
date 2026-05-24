@@ -186,6 +186,24 @@ export function applyTooFar(db: Database.Database, eventId: string): void {
   tx();
 }
 
+/**
+ * Reverse the source/venue penalties applied by applyTooFar. Used by the
+ * Undo toast when the user changes their mind within ~5 seconds of clicking
+ * 🚗 Too far. Symmetric — adds back the same magnitudes that applyTooFar
+ * subtracted, clamped to [-100, 100] in the bumpVenue/bumpSource helpers.
+ */
+export function revertTooFar(db: Database.Database, eventId: string): void {
+  const row = db
+    .prepare("SELECT source, venue_name FROM events WHERE id = ?")
+    .get(eventId) as { source: string; venue_name: string | null } | undefined;
+  if (!row) return;
+  const tx = db.transaction(() => {
+    bumpSource(db, row.source, -LEARN.tooFarSourcePenalty);
+    if (row.venue_name) bumpVenue(db, row.venue_name, -LEARN.tooFarVenuePenalty);
+  });
+  tx();
+}
+
 function bumpVenue(db: Database.Database, venue: string, delta: number) {
   db.prepare(
     `INSERT INTO venue_affinity (venue_name, bonus) VALUES (?, ?)

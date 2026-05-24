@@ -11,9 +11,12 @@ import type { EventWithExtras } from "@/lib/db";
 type Props = {
   event: EventWithExtras;
   onChange?: () => void;
+  // Fires after a negative action (👎, 🚗, ⏭) so a global Undo toast can appear.
+  // Each handler builds an undo callback that reverses its own side effects.
+  onShowToast?: (message: string, onUndo: () => void | Promise<void>) => void;
 };
 
-export function EventCard({ event, onChange }: Props) {
+export function EventCard({ event, onChange, onShowToast }: Props) {
   const [busy, setBusy] = useState(false);
   const [showAttendance, setShowAttendance] = useState(false);
   const [descExpanded, setDescExpanded] = useState(false);
@@ -42,18 +45,34 @@ export function EventCard({ event, onChange }: Props) {
   const price = priceDisplayFor(event);
 
   async function setInterest(value: -1 | 0 | 1) {
-    setLocalInterest(value === localInterest ? 0 : value); // optimistic
+    const prev = localInterest ?? 0;
+    const next = value === localInterest ? 0 : value;
+    setLocalInterest(next); // optimistic
     setBusy(true);
     await fetch("/api/interest", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ event_id: event.id, value: value === localInterest ? 0 : value }),
+      body: JSON.stringify({ event_id: event.id, value: next }),
     });
     setBusy(false);
     onChange?.();
+    // Only surface an undo for the negative click (👎 → -1). Going back to
+    // neutral via a second click on 👎 is itself an undo, no toast needed.
+    if (next === -1 && onShowToast) {
+      onShowToast(`Marked "${truncate(event.title, 40)}" as Not for me`, async () => {
+        setLocalInterest(prev);
+        await fetch("/api/interest", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ event_id: event.id, value: prev }),
+        });
+        onChange?.();
+      });
+    }
   }
 
   async function markTooFar() {
+    const prev = localInterest ?? 0;
     setLocalInterest(-1);
     setBusy(true);
     await fetch("/api/interest", {
@@ -63,9 +82,24 @@ export function EventCard({ event, onChange }: Props) {
     });
     setBusy(false);
     onChange?.();
+    onShowToast?.(
+      `Marked "${truncate(event.title, 40)}" as Too far`,
+      async () => {
+        setLocalInterest(prev);
+        // Reverse: clear the interest AND undo the source/venue affinity hit
+        // that applyTooFar applied. revert_too_far is handled by the API.
+        await fetch("/api/interest", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ event_id: event.id, value: prev, revert_too_far: true }),
+        });
+        onChange?.();
+      }
+    );
   }
 
   async function toggleDismissed() {
+    const prev = localDismissed;
     const next = localDismissed === 1 ? 0 : 1;
     setLocalDismissed(next);
     setBusy(true);
@@ -76,6 +110,17 @@ export function EventCard({ event, onChange }: Props) {
     });
     setBusy(false);
     onChange?.();
+    if (next === 1 && onShowToast) {
+      onShowToast(`Dismissed "${truncate(event.title, 40)}"`, async () => {
+        setLocalDismissed(prev ?? 0);
+        await fetch("/api/dismiss", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ event_id: event.id, dismissed: false }),
+        });
+        onChange?.();
+      });
+    }
   }
 
   async function toggleRegistered() {
@@ -422,4 +467,8 @@ function formatEventDateLabel(event: EventWithExtras): string {
     hour: "numeric",
     minute: "2-digit",
   });
+}
+
+function truncate(s: string, n: number): string {
+  return s.length > n ? `${s.slice(0, n - 1)}…` : s;
 }

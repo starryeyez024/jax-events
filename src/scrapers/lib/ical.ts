@@ -34,9 +34,20 @@ export async function fetchIcal(opts: IcalFetchOpts): Promise<EventInput[]> {
   const data = await nodeIcal.async.fromURL(opts.url);
   const events: EventInput[] = [];
 
+  // Skip events older than yesterday. Most feeds (Meetup, Cummer) only ship
+  // upcoming events anyway, but Google Calendar's iCal export includes the
+  // full history — without this filter, a long-running calendar dumps years
+  // of dead events into the DB.
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 1);
+
   for (const value of Object.values(data)) {
     const v = value as unknown as IcalVEvent;
     if (v.type !== "VEVENT" || !v.start) continue;
+    // Use ends_at when present (multi-day events still relevant during their
+    // span), otherwise fall back to starts_at.
+    const tail = v.end ?? v.start;
+    if (tail < cutoff) continue;
 
     const classified = opts.classify ? opts.classify(v) : [];
     const categories = classified.length ? classified : opts.defaultCategories;

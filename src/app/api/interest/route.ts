@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getDb } from "@/lib/db";
-import { applyInterest, applyTooFar } from "@/lib/scoring";
+import { applyInterest, applyTooFar, revertTooFar } from "@/lib/scoring";
 
 const Body = z.object({
   event_id: z.string().min(1),
   value: z.union([z.literal(-1), z.literal(0), z.literal(1)]),
   too_far: z.boolean().optional(),
+  // Sent by the Undo toast: clears the interest flag AND reverses the
+  // source/venue affinity penalties applied by the original 🚗 Too far click.
+  revert_too_far: z.boolean().optional(),
   note: z.string().optional(),
 });
 
@@ -15,7 +18,7 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
-  const { event_id, value, too_far, note } = parsed.data;
+  const { event_id, value, too_far, revert_too_far, note } = parsed.data;
 
   const db = getDb();
   db.prepare(
@@ -23,10 +26,12 @@ export async function POST(req: NextRequest) {
      ON CONFLICT(event_id) DO UPDATE SET value=excluded.value, note=excluded.note, updated_at=CURRENT_TIMESTAMP`
   ).run(event_id, value, note ?? (too_far ? "too far" : null));
 
-  if (too_far) {
-    // "Interesting but too far" — penalize the source/venue without touching
-    // category weights. You still like the topic; you just don't want events
-    // from this specific Meetup group or venue.
+  if (revert_too_far) {
+    // Undo path for the 🚗 Too far click: reverse the source/venue penalties
+    // applied by applyTooFar. Skip applyInterest so category weights aren't
+    // touched (the original click didn't move them either).
+    revertTooFar(db, event_id);
+  } else if (too_far) {
     applyTooFar(db, event_id);
   } else {
     applyInterest(db, event_id, value);

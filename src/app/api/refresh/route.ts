@@ -9,6 +9,7 @@ import { fetchVisitJax } from "@/scrapers/visit-jax";
 import { fetchKickers } from "@/scrapers/kickers";
 import { fetchAtlanticBeach } from "@/scrapers/atlantic-beach";
 import { fetchEventbrite } from "@/scrapers/eventbrite";
+import { fetchBoldCitySwing } from "@/scrapers/bold-city-swing";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,7 @@ const SOURCES: Record<string, SourceFn> = {
   kickers: fetchKickers,
   "atlantic-beach": fetchAtlanticBeach,
   eventbrite: fetchEventbrite,
+  "bold-city-swing": fetchBoldCitySwing,
 };
 
 export async function POST() {
