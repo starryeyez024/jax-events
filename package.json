@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.96.0",
+    "@supabase/supabase-js": "^2.106.1",
     "better-sqlite3": "^11.7.0",
     "cheerio": "^1.2.0",
     "next": "^15.5.18",
