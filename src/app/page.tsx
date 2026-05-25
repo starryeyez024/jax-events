@@ -117,64 +117,44 @@ export default function Home() {
   }, [events, sort]);
 
   return (
-    <div className="max-w-7xl mx-auto p-4 md:p-6">
-      <header className="flex flex-wrap items-center justify-between gap-3 mb-4">
+    <div className="max-w-7xl mx-auto p-4 md:p-8">
+      <header className="flex flex-wrap items-end justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-ocean-900">
-            <span aria-hidden className="mr-1">📅</span>
-            Jax Beach Fun Times
+          <h1 className="font-title text-3xl md:text-4xl tracking-tight text-slate-900 leading-none">
+            <span aria-hidden className="mr-2">🏄</span>
+            Wavelength
           </h1>
-          <p className="text-sm text-slate-600">
-            Personal event radar for Jacksonville Beach
+          <p className="text-sm text-slate-500 mt-2 font-medium tracking-wide">
+            Events on your wavelength · Jacksonville Beach
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <div className="rounded border bg-white p-0.5 text-sm">
-            <button
-              onClick={() => setSort("match")}
-              className={`px-3 py-1 rounded ${
-                sort === "match" ? "bg-ocean-500 text-white" : ""
-              }`}
-            >
-              Best match
-            </button>
-            <button
-              onClick={() => setSort("chrono")}
-              className={`px-3 py-1 rounded ${
-                sort === "chrono" ? "bg-ocean-500 text-white" : ""
-              }`}
-            >
-              Chronological
-            </button>
-          </div>
-          <div className="rounded border bg-white p-0.5 text-sm">
-            <button
-              onClick={() => setView("list")}
-              className={`px-3 py-1 rounded ${
-                view === "list" ? "bg-ocean-500 text-white" : ""
-              }`}
-            >
-              List
-            </button>
-            <button
-              onClick={() => setView("calendar")}
-              className={`px-3 py-1 rounded ${
-                view === "calendar" ? "bg-ocean-500 text-white" : ""
-              }`}
-            >
-              Calendar
-            </button>
-          </div>
+          <SegmentedToggle
+            options={[
+              { value: "match", label: "Best match" },
+              { value: "chrono", label: "Chronological" },
+            ]}
+            value={sort}
+            onChange={(v) => setSort(v as SortMode)}
+          />
+          <SegmentedToggle
+            options={[
+              { value: "list", label: "List" },
+              { value: "calendar", label: "Calendar" },
+            ]}
+            value={view}
+            onChange={(v) => setView(v as "list" | "calendar")}
+          />
           <button
             onClick={() => setTipOpen(true)}
-            className="px-3 py-1 text-sm rounded border bg-white hover:bg-slate-50"
+            className="px-4 py-2 text-[12.8px] font-medium rounded-full border border-slate-200 bg-white/70 backdrop-blur hover:bg-white hover:border-slate-300 transition"
             title="Saw an event on Instagram, Facebook, or elsewhere? Paste it here and Claude will extract the details."
           >
             ＋ Add tip
           </button>
           <a
             href="/api/calendar.ics?status=registered"
-            className="px-3 py-1 text-sm rounded border bg-white hover:bg-slate-50"
+            className="px-4 py-2 text-[12.8px] font-medium rounded-full border border-slate-200 bg-white/70 backdrop-blur hover:bg-white hover:border-slate-300 transition"
             title="Download .ics of your registered events, or use this URL to subscribe in Google Calendar"
             download
           >
@@ -183,7 +163,7 @@ export default function Home() {
           <button
             onClick={refreshScrapers}
             disabled={refreshing}
-            className="px-3 py-1 text-sm rounded border bg-white hover:bg-slate-50 disabled:opacity-50"
+            className="px-4 py-2 text-sm font-medium rounded-full border border-slate-200 bg-white/70 backdrop-blur hover:bg-white hover:border-slate-300 transition disabled:opacity-50"
             title="Pull fresh events from configured sources"
           >
             {refreshing ? "Refreshing…" : "↻ Refresh"}
@@ -199,7 +179,7 @@ export default function Home() {
       <UndoToast toast={toast} onDismiss={() => setToast(null)} />
 
 
-      <div className="grid md:grid-cols-[280px_1fr] gap-4">
+      <div className="grid md:grid-cols-[300px_1fr] gap-10">
         <aside>
           <Filters
             value={filters}
@@ -212,14 +192,13 @@ export default function Home() {
         <main>
           {view === "list" ? (
             <>
-              <div className="text-xs text-slate-500 px-1 mb-2">
-                <strong>Match score</strong>: how well an event fits your stated tastes
-                (higher = better). Shifts as you 👍/👎 and rate things you attend. Stars
-                (★ 1–5) only appear when you rate an event after attending.
+              <div className="text-xs text-slate-500 px-1 mb-3 leading-relaxed">
+                <strong className="text-slate-700">Match score</strong> — how well an event fits your stated tastes
+                (higher = better). Shifts as you 👍/👎 and rate things you attend.
               </div>
               <div className="space-y-3">
                 {visible.length === 0 && !loading && (
-                  <div className="text-sm text-slate-600 bg-white border rounded p-4">
+                  <div className="text-sm text-slate-600 bg-white border border-slate-200 rounded-2xl p-6 text-center">
                     No events match. Try widening the date range or clearing filters.
                   </div>
                 )}
@@ -238,6 +217,40 @@ export default function Home() {
           )}
         </main>
       </div>
+    </div>
+  );
+}
+
+// Small segmented control used in the header for sort + view toggles.
+// Visual: pill-shaped track, soft white background, active state is a darker
+// pill that floats inside. Replaces the older square-ish bordered version.
+function SegmentedToggle({
+  options,
+  value,
+  onChange,
+}: {
+  options: { value: string; label: string }[];
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="inline-flex items-center rounded-full border border-slate-200 bg-white/70 backdrop-blur p-1 text-[12.8px] font-medium">
+      {options.map((o) => {
+        const active = o.value === value;
+        return (
+          <button
+            key={o.value}
+            onClick={() => onChange(o.value)}
+            className={`px-4 py-1.5 rounded-full transition ${
+              active
+                ? "bg-slate-900 text-white"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            {o.label}
+          </button>
+        );
+      })}
     </div>
   );
 }

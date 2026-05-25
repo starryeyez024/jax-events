@@ -6,6 +6,30 @@
   color-scheme: light;
 }
 
+/* Ambient gradient mesh — leaning into pink (blush) and green (mint) as
+   the dominant atmospheric notes, with the other pastels acting as quieter
+   supporting tones. Six washes instead of four so pink and green show up
+   on both top and bottom edges of the viewport. */
 body {
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: #FEFCF7;
+  background-image:
+    /* upper band: green left, pink right */
+    radial-gradient(ellipse 55% 45% at 8% -8%, rgba(180, 224, 196, 0.70) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 100% 5%, rgba(248, 198, 214, 0.70) 0%, transparent 60%),
+    /* mid: quiet purple + yellow accents */
+    radial-gradient(ellipse 35% 30% at 50% 35%, rgba(229, 220, 247, 0.30) 0%, transparent 60%),
+    radial-gradient(ellipse 30% 25% at 88% 55%, rgba(251, 237, 181, 0.35) 0%, transparent 60%),
+    /* lower band: pink left, green right */
+    radial-gradient(ellipse 55% 50% at 0% 100%, rgba(248, 198, 214, 0.70) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 50% at 95% 105%, rgba(180, 224, 196, 0.65) 0%, transparent 60%);
+  background-attachment: fixed;
+}
+
+/* Inset-style focus ring — sits flush against the element rather than
+   blurring outside it. Currently in fashion in design-system work (Linear,
+   Radix). */
+*:focus-visible {
+  outline: 2px solid rgba(15, 23, 42, 0.5);
+  outline-offset: 1px;
+  border-radius: 6px;
 }

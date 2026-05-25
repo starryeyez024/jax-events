@@ -46,14 +46,14 @@ export function UndoToast({ toast, onDismiss, durationMs = 5000 }: Props) {
     <div
       role="status"
       aria-live="polite"
-      className="fixed bottom-4 right-4 z-50 flex items-center gap-3 rounded-lg border border-slate-700 bg-slate-800 text-white shadow-lg px-4 py-2.5 text-sm max-w-sm animate-in fade-in slide-in-from-bottom-2"
+      className="fixed bottom-6 right-6 z-50 flex items-center gap-4 rounded-2xl border border-slate-300 bg-white/95 backdrop-blur-md text-slate-800 px-5 py-3 text-sm max-w-sm"
     >
       <span className="flex-1 min-w-0 truncate">{toast.message}</span>
       <button
         type="button"
         disabled={busy}
         onClick={handleUndo}
-        className="font-semibold text-ocean-300 hover:text-white disabled:opacity-50"
+        className="font-semibold text-ocean-600 hover:text-ocean-700 transition disabled:opacity-50 underline-offset-2 hover:underline"
       >
         {busy ? "Undoing…" : "Undo"}
       </button>

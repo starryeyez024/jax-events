@@ -49,12 +49,14 @@ export function eventTypeFor(e: EventLike): EventType {
   return "one-off";
 }
 
-// Emoji + label per type. Picked to grade from bright to muted:
-//   one-off  → party popper (saturated, attention-grabbing)
-//   monthly  → loop arrows (mid contrast)
-//   evergreen → grey square pin (muted, "always there")
+// Glyph per type:
+//   one-off  → bullet • (neutral — most events are one-offs, so this is the
+//              "default" mark; was a 🎉 originally but turned into visual
+//              noise in dense lists like the calendar day view)
+//   monthly  → 🔁 (recurring cadence)
+//   evergreen → 📍 (always-on / ongoing)
 export const TYPE_ICONS: Record<EventType, string> = {
-  "one-off": "🎉",
+  "one-off": "•",
   monthly: "🔁",
   evergreen: "📍",
 };
