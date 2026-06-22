@@ -8,6 +8,7 @@
     "start": "next start",
     "seed": "tsx scripts/seed.ts",
     "scrape": "tsx scripts/scrape.ts",
+    "export": "tsx scripts/export-json.ts",
     "reset-db": "rm -f data/events.db && npm run seed"
   },
   "dependencies": {

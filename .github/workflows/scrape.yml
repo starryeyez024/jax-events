@@ -1,0 +1,59 @@
+name: Scrape events & publish snapshot
+
+# Runs the scrapers on a schedule, regenerates public/events.json, and commits
+# it. The commit triggers Vercel's auto-deploy, so the live site refreshes
+# without any database. Manual runs: Actions tab → this workflow → Run workflow.
+
+on:
+  schedule:
+    # Mondays at 11:00 UTC (~6–7am US Eastern). cron is always UTC.
+    - cron: "0 11 * * 1"
+  workflow_dispatch: {}
+
+# Needed so the job can push the regenerated snapshot back to the repo.
+permissions:
+  contents: write
+
+# Never let two scrape runs overlap.
+concurrency:
+  group: scrape
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - run: npm ci
+
+      # Populates a fresh data/events.db in the runner. Per-source isolation
+      # means a single broken source won't fail the run; the script only exits
+      # non-zero if EVERY source fails, which correctly skips publishing.
+      - name: Scrape all sources
+        run: npm run scrape
+        env:
+          TICKETMASTER_API_KEY: ${{ secrets.TICKETMASTER_API_KEY }}
+          MEETUP_GROUPS: ${{ vars.MEETUP_GROUPS }}
+          HOME_LAT: "30.2867"
+          HOME_LON: "-81.3934"
+
+      - name: Export snapshot
+        run: npm run export
+
+      - name: Commit snapshot if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add public/events.json
+          if git diff --staged --quiet; then
+            echo "No changes to events.json — nothing to publish."
+          else
+            git commit -m "chore: refresh events snapshot"
+            git push
+          fi

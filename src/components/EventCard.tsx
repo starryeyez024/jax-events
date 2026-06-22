@@ -10,6 +10,7 @@ import { BUCKET_LABELS } from "@/lib/distance";
 import { typeFor } from "@/lib/event-type";
 import { renderDescription } from "@/lib/render-text";
 import { priceDisplayFor } from "@/lib/price-estimate";
+import { READ_ONLY } from "@/lib/config";
 import type { EventWithExtras } from "@/lib/db";
 
 type Props = {
@@ -313,16 +314,20 @@ export function EventCard({ event, onChange, onShowToast }: Props) {
               {price.text}
             </div>
           )}
-          <div
-            className={`text-[11px] font-medium px-2 py-0.5 rounded-full inline-block ${matchTone}`}
-            title="Match score (0–100+). Higher = better fit. Includes distance penalty."
-          >
-            {event.score}
-          </div>
-          {event.distance_penalty < 0 && (
-            <div className="text-[10px] text-slate-400" title="Distance penalty applied">
-              {event.distance_penalty} dist
-            </div>
+          {!READ_ONLY && (
+            <>
+              <div
+                className={`text-[11px] font-medium px-2 py-0.5 rounded-full inline-block ${matchTone}`}
+                title="Match score (0–100+). Higher = better fit. Includes distance penalty."
+              >
+                {event.score}
+              </div>
+              {event.distance_penalty < 0 && (
+                <div className="text-[10px] text-slate-400" title="Distance penalty applied">
+                  {event.distance_penalty} dist
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -361,6 +366,7 @@ export function EventCard({ event, onChange, onShowToast }: Props) {
         </div>
       )}
 
+      {!READ_ONLY && (
       <div className="flex items-center gap-1.5 mt-4 text-sm flex-wrap">
         <ActionBtn
           disabled={busy}
@@ -415,8 +421,9 @@ export function EventCard({ event, onChange, onShowToast }: Props) {
             : "✓ I went"}
         </ActionBtn>
       </div>
+      )}
 
-      {showAttendance && (
+      {!READ_ONLY && showAttendance && (
         <div className="mt-2">
           <div className="text-xs text-slate-500 mb-1">
             How was it? (1 = bad, 5 = loved it — this teaches the system what you actually enjoy)

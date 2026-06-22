@@ -7,6 +7,8 @@ import { CalendarView } from "@/components/CalendarView";
 import { Filters, type FilterState } from "@/components/Filters";
 import { TipModal } from "@/components/TipModal";
 import { UndoToast, type ToastState } from "@/components/UndoToast";
+import { READ_ONLY } from "@/lib/config";
+import { filterEvents } from "@/lib/filter-events";
 
 function todayIso(): string {
   const d = new Date();
@@ -23,7 +25,9 @@ type SortMode = "match" | "chrono";
 
 export default function Home() {
   const [view, setView] = useState<"list" | "calendar">("list");
-  const [sort, setSort] = useState<SortMode>("match");
+  // Public read-only mode has no visible match score, so default to a plain
+  // chronological list.
+  const [sort, setSort] = useState<SortMode>(READ_ONLY ? "chrono" : "match");
   const [filters, setFilters] = useState<FilterState>({
     search: "",
     selectedCategories: [],
@@ -80,9 +84,17 @@ export default function Home() {
 
   async function load() {
     setLoading(true);
-    const res = await fetch(`/api/events?${query}`);
-    const json = await res.json();
-    setEvents(json.events ?? []);
+    if (READ_ONLY) {
+      // Static public mode: no API/database. Load the whole snapshot and
+      // narrow it in the browser (mirrors the server filters).
+      const res = await fetch("/events.json");
+      const json = await res.json();
+      setEvents(filterEvents(json.events ?? [], filters));
+    } else {
+      const res = await fetch(`/api/events?${query}`);
+      const json = await res.json();
+      setEvents(json.events ?? []);
+    }
     setLoading(false);
   }
 
@@ -129,14 +141,16 @@ export default function Home() {
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <SegmentedToggle
-            options={[
-              { value: "match", label: "Best match" },
-              { value: "chrono", label: "Chronological" },
-            ]}
-            value={sort}
-            onChange={(v) => setSort(v as SortMode)}
-          />
+          {!READ_ONLY && (
+            <SegmentedToggle
+              options={[
+                { value: "match", label: "Best match" },
+                { value: "chrono", label: "Chronological" },
+              ]}
+              value={sort}
+              onChange={(v) => setSort(v as SortMode)}
+            />
+          )}
           <SegmentedToggle
             options={[
               { value: "list", label: "List" },
@@ -145,13 +159,15 @@ export default function Home() {
             value={view}
             onChange={(v) => setView(v as "list" | "calendar")}
           />
-          <button
-            onClick={() => setTipOpen(true)}
-            className="px-4 py-2 text-[12.8px] font-medium rounded-full border border-slate-200 bg-white/70 backdrop-blur hover:bg-white hover:border-slate-300 transition"
-            title="Saw an event on Instagram, Facebook, or elsewhere? Paste it here and Claude will extract the details."
-          >
-            ＋ Add tip
-          </button>
+          {!READ_ONLY && (
+            <button
+              onClick={() => setTipOpen(true)}
+              className="px-4 py-2 text-[12.8px] font-medium rounded-full border border-slate-200 bg-white/70 backdrop-blur hover:bg-white hover:border-slate-300 transition"
+              title="Saw an event on Instagram, Facebook, or elsewhere? Paste it here and Claude will extract the details."
+            >
+              ＋ Add tip
+            </button>
+          )}
           <a
             href="/api/calendar.ics?status=registered"
             className="px-4 py-2 text-[12.8px] font-medium rounded-full border border-slate-200 bg-white/70 backdrop-blur hover:bg-white hover:border-slate-300 transition"
@@ -160,14 +176,16 @@ export default function Home() {
           >
             📅 Export
           </a>
-          <button
-            onClick={refreshScrapers}
-            disabled={refreshing}
-            className="px-4 py-2 text-sm font-medium rounded-full border border-slate-200 bg-white/70 backdrop-blur hover:bg-white hover:border-slate-300 transition disabled:opacity-50"
-            title="Pull fresh events from configured sources"
-          >
-            {refreshing ? "Refreshing…" : "↻ Refresh"}
-          </button>
+          {!READ_ONLY && (
+            <button
+              onClick={refreshScrapers}
+              disabled={refreshing}
+              className="px-4 py-2 text-sm font-medium rounded-full border border-slate-200 bg-white/70 backdrop-blur hover:bg-white hover:border-slate-300 transition disabled:opacity-50"
+              title="Pull fresh events from configured sources"
+            >
+              {refreshing ? "Refreshing…" : "↻ Refresh"}
+            </button>
+          )}
         </div>
       </header>
 
@@ -192,10 +210,12 @@ export default function Home() {
         <main>
           {view === "list" ? (
             <>
-              <div className="text-xs text-slate-500 px-1 mb-3 leading-relaxed">
-                <strong className="text-slate-700">Match score</strong> — how well an event fits your stated tastes
-                (higher = better). Shifts as you 👍/👎 and rate things you attend.
-              </div>
+              {!READ_ONLY && (
+                <div className="text-xs text-slate-500 px-1 mb-3 leading-relaxed">
+                  <strong className="text-slate-700">Match score</strong> — how well an event fits your stated tastes
+                  (higher = better). Shifts as you 👍/👎 and rate things you attend.
+                </div>
+              )}
               <div className="space-y-3">
                 {visible.length === 0 && !loading && (
                   <div className="text-sm text-slate-600 bg-white border border-slate-200 rounded-2xl p-6 text-center">
