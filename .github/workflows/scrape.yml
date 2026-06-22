@@ -30,7 +30,10 @@ jobs:
           node-version: "22"
           cache: "npm"
 
-      - run: npm ci
+      # Use `npm install` rather than `npm ci`: it reconciles minor lockfile
+      # drift instead of failing the whole run, which keeps the weekly job
+      # resilient across npm versions on the runner.
+      - run: npm install --no-audit --no-fund
 
       # Populates a fresh data/events.db in the runner. Per-source isolation
       # means a single broken source won't fail the run; the script only exits
