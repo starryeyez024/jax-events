@@ -8,6 +8,7 @@
 // Cron:    triggered weekly by scripts/refresh.sh + the launchd plist.
 
 import { getDb, upsertEvent, recordSourceRun, type EventInput } from "../src/lib/db";
+import { isNotAnEvent } from "../src/lib/non-events";
 import { fetchTicketmaster } from "../src/scrapers/ticketmaster";
 import { fetchCummer } from "../src/scrapers/cummer";
 import { fetchFloridaTheatre } from "../src/scrapers/florida-theatre";
@@ -39,19 +40,24 @@ const SOURCES: Record<string, SourceFn> = {
 async function main() {
   const start = Date.now();
   const db = getDb();
-  const results: Array<{ source: string; fetched: number; error?: string; ms: number }> = [];
+  const results: Array<{ source: string; fetched: number; error?: string; ms: number; dropped?: number }> = [];
 
   await Promise.all(
     Object.entries(SOURCES).map(async ([name, fn]) => {
       const t0 = Date.now();
       try {
-        const events = await fn();
+        const fetched = await fn();
+        // City calendars carry closure and cancellation notices alongside
+        // real events. There is nothing to attend, so they never enter the
+        // database — but the count is logged rather than silently swallowed.
+        const events = fetched.filter((e) => !isNotAnEvent(e.title));
+        const dropped = fetched.length - events.length;
         const tx = db.transaction(() => {
           for (const e of events) upsertEvent(db, e);
         });
         tx();
         const ms = Date.now() - t0;
-        results.push({ source: name, fetched: events.length, ms });
+        results.push({ source: name, fetched: events.length, ms, dropped });
         recordSourceRun(db, {
           source: name,
           status: "ok",
@@ -80,7 +86,9 @@ async function main() {
   const stamp = new Date().toISOString();
   console.log(`[${stamp}] scrape complete in ${Date.now() - start}ms`);
   for (const r of results) {
-    const tag = r.error ? `error: ${r.error}` : `+${r.fetched}`;
+    const tag = r.error
+      ? `error: ${r.error}`
+      : `+${r.fetched}${r.dropped ? ` (${r.dropped} notice${r.dropped === 1 ? "" : "s"} skipped)` : ""}`;
     console.log(`  ${r.source.padEnd(18)} ${String(r.ms).padStart(6)}ms  ${tag}`);
   }
 

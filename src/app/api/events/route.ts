@@ -29,6 +29,7 @@ export async function GET(req: NextRequest) {
     priceBands: sp.getAll("price").filter(isPriceBand),
     includeRecurring: sp.get("includeRecurring") !== "0",
     includeMonthly: sp.get("includeMonthly") !== "0",
+    includeProcedural: sp.get("includeProcedural") === "1",
     hideUninterested: sp.get("hideUninterested") === "1",
     maxDistance: maxDist && isBucket(maxDist) ? maxDist : undefined,
     interestedOnly: sp.get("interestedOnly") === "1",

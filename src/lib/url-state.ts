@@ -37,6 +37,7 @@ export function defaultFilters(from: string, to: string): FilterState {
     priceBands: ["free", "paid", "unknown"],
     includeRecurring: true,
     includeMonthly: true,
+    includeProcedural: false,
     hideUninterested: true,
     maxDistance: "nearby",
     from,
@@ -65,6 +66,7 @@ export function encodeViewState(s: ViewState, d: Defaults): string {
   }
   if (f.includeRecurring !== defaults.includeRecurring) p.set("recurring", f.includeRecurring ? "1" : "0");
   if (f.includeMonthly !== defaults.includeMonthly) p.set("monthly", f.includeMonthly ? "1" : "0");
+  if (f.includeProcedural !== defaults.includeProcedural) p.set("govt", f.includeProcedural ? "1" : "0");
   if (f.hideUninterested !== defaults.hideUninterested) p.set("hideDown", f.hideUninterested ? "1" : "0");
   if (f.maxDistance !== defaults.maxDistance) p.set("dist", f.maxDistance);
 
@@ -123,6 +125,7 @@ export function decodeViewState(
         priceBands: decodeBands(p, defaults.priceBands),
         includeRecurring: bool(p.get("recurring"), defaults.includeRecurring),
         includeMonthly: bool(p.get("monthly"), defaults.includeMonthly),
+        includeProcedural: bool(p.get("govt"), defaults.includeProcedural),
         hideUninterested: bool(p.get("hideDown"), defaults.hideUninterested),
         maxDistance: bucket(p.get("dist")) ?? defaults.maxDistance,
         allCategories,
