@@ -290,14 +290,19 @@ export default function Home() {
           sidebarOpen ? "md:gap-10" : "md:gap-4"
         }`}
       >
+        {/* sticky lives on the aside itself, not on an inner div. This
+            element has overflow-hidden (to clip the width animation), which
+            makes it a scroll container — so a sticky child resolves against
+            the aside rather than the viewport, which both pushed the panel
+            down by `top` at every scroll position and stopped it ever
+            tracking the viewport. self-start is required too: a stretched
+            flex item fills the row, leaving nothing to scroll past. */}
         <aside
-          className={`shrink-0 overflow-hidden transition-[width] duration-300 ease-out motion-reduce:transition-none w-full ${
+          className={`shrink-0 overflow-hidden md:sticky md:top-6 md:self-start transition-[width] duration-300 ease-out motion-reduce:transition-none w-full ${
             sidebarOpen ? "md:w-[300px]" : "md:w-[56px]"
           }`}
         >
-          {/* Pinned to the viewport so the trigger stays reachable when the
-              results column is long. */}
-          <div className="md:sticky md:top-6">
+          <div>
             <Filters
               value={filters}
               onChange={setFilters}
