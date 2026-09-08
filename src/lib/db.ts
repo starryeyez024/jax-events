@@ -2,6 +2,7 @@ import Database from "better-sqlite3";
 import path from "node:path";
 import fs from "node:fs";
 import { CATEGORIES, DEFAULT_WEIGHTS, type Category } from "./categories";
+import { metaForSource, type SourceStatus } from "./sources";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const DB_PATH = path.join(DATA_DIR, "events.db");
@@ -115,6 +116,21 @@ function migrate(db: Database.Database) {
       event_id     TEXT PRIMARY KEY REFERENCES events(id) ON DELETE CASCADE,
       dismissed    INTEGER NOT NULL,         -- 1 = hidden, 0 = restored
       dismissed_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- Outcome of the most recent scrape attempt, one row per source.
+    --
+    -- Needed because a broken scraper is invisible in the events table: it
+    -- just stops contributing rows, which looks identical to "that venue has
+    -- nothing scheduled". Recording the attempt lets /sources distinguish
+    -- "checked, genuinely empty" from "hasn't worked since August".
+    CREATE TABLE IF NOT EXISTS source_runs (
+      source      TEXT PRIMARY KEY,
+      status      TEXT NOT NULL,             -- 'ok' | 'error'
+      fetched     INTEGER NOT NULL DEFAULT 0,
+      error       TEXT,                      -- null when status='ok'
+      duration_ms INTEGER,
+      ran_at      TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
   `);
 }
@@ -259,6 +275,107 @@ export function upsertEvent(db: Database.Database, e: EventInput): string {
   for (const c of e.categories) insCat.run(id, c);
 
   return id;
+}
+
+// ----- Source run tracking (feeds the /sources transparency page) -----
+
+export type SourceRunInput = {
+  source: string;
+  status: "ok" | "error";
+  fetched: number;
+  error?: string | null;
+  duration_ms?: number | null;
+};
+
+export function recordSourceRun(db: Database.Database, r: SourceRunInput): void {
+  db.prepare(
+    `INSERT INTO source_runs (source, status, fetched, error, duration_ms, ran_at)
+     VALUES (@source, @status, @fetched, @error, @duration_ms, CURRENT_TIMESTAMP)
+     ON CONFLICT(source) DO UPDATE SET
+       status=excluded.status,
+       fetched=excluded.fetched,
+       error=excluded.error,
+       duration_ms=excluded.duration_ms,
+       ran_at=CURRENT_TIMESTAMP`
+  ).run({
+    source: r.source,
+    status: r.status,
+    fetched: r.fetched,
+    error: r.error ?? null,
+    duration_ms: r.duration_ms ?? null,
+  });
+}
+
+/**
+ * Everything the /sources page needs, in one shot.
+ *
+ * Full-outer-joins two sets that only partly overlap: sources that have
+ * upcoming events, and sources that were attempted on the last run. A scraper
+ * can appear in one and not the other — Ticketmaster is attempted every run
+ * and contributes nothing (no API key), while community-digest contributes
+ * events but is never "run" at all. Both need to show up.
+ */
+export function getSourceStatuses(db: Database.Database): SourceStatus[] {
+  const rows = db
+    .prepare(
+      `WITH upcoming AS (
+         SELECT source,
+                count(*)          AS n,
+                max(starts_at)    AS through,
+                -- When we last actually received data from this source. Note
+                -- this is deliberately NOT the last run attempt: a scraper
+                -- can run and fail, and "last updated" should reflect the
+                -- last time real data arrived.
+                max(last_seen_at) AS updated
+         FROM events
+         WHERE starts_at >= datetime('now')
+         GROUP BY source
+       ),
+       every_source AS (
+         SELECT source FROM upcoming
+         UNION
+         SELECT source FROM source_runs
+       )
+       SELECT s.source,
+              coalesce(u.n, 0)  AS upcoming,
+              u.through         AS covers_through,
+              u.updated         AS last_updated,
+              r.ran_at          AS last_run_at,
+              r.status          AS last_status,
+              r.error           AS last_error
+       FROM every_source s
+       LEFT JOIN upcoming    u ON u.source = s.source
+       LEFT JOIN source_runs r ON r.source = s.source
+       ORDER BY upcoming DESC, s.source`
+    )
+    .all() as Array<{
+    source: string;
+    upcoming: number;
+    covers_through: string | null;
+    last_updated: string | null;
+    last_run_at: string | null;
+    last_status: "ok" | "error" | null;
+    last_error: string | null;
+  }>;
+
+  // The Meetup scraper is registered under the bare key 'meetup' but writes
+  // events tagged 'meetup:<group-slug>'. Without this, each group row would
+  // show no run stamp at all and read as "never checked" when the truth is
+  // "the shared Meetup integration ran and failed". Let groups inherit the
+  // parent's outcome so every row explains itself.
+  const parent = rows.find((r) => r.source === "meetup");
+  const withRuns = rows.map((r) =>
+    r.source.startsWith("meetup:") && !r.last_run_at && parent
+      ? {
+          ...r,
+          last_run_at: parent.last_run_at,
+          last_status: parent.last_status,
+          last_error: parent.last_error,
+        }
+      : r
+  );
+
+  return withRuns.map((r) => ({ ...r, ...metaForSource(r.source) }));
 }
 
 function hashKey(s: string): string {

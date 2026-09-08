@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import type { EventWithExtras } from "@/lib/db";
 import { EventCard } from "@/components/EventCard";
 import { CalendarView } from "@/components/CalendarView";
@@ -139,6 +140,12 @@ export default function Home() {
           <p className="text-sm text-slate-500 mt-2 font-medium tracking-wide">
             Events on your wavelength · Jacksonville Beach
           </p>
+          <Link
+            href="/sources"
+            className="inline-block text-[12.8px] text-slate-500 hover:text-slate-900 underline decoration-slate-300 underline-offset-4 mt-2 transition"
+          >
+            Sources &amp; freshness
+          </Link>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {!READ_ONLY && (

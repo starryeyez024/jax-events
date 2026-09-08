@@ -10,7 +10,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { getDb } from "../src/lib/db";
+import { getDb, getSourceStatuses } from "../src/lib/db";
 import { queryEvents } from "../src/lib/events-query";
 
 // How far ahead to snapshot. The page's date filter narrows within this
@@ -51,6 +51,18 @@ function main() {
   const file = path.join(dir, "events.json");
   fs.writeFileSync(file, JSON.stringify(payload));
   console.log(`wrote ${events.length} events → ${path.relative(process.cwd(), file)}`);
+
+  // Companion snapshot for the /sources page. Written unconditionally so the
+  // static site never has to fall back to a stale or missing file.
+  const sources = getSourceStatuses(db);
+  const sourcesFile = path.join(dir, "sources.json");
+  fs.writeFileSync(
+    sourcesFile,
+    JSON.stringify({ generated_at: new Date().toISOString(), sources })
+  );
+  console.log(
+    `wrote ${sources.length} sources → ${path.relative(process.cwd(), sourcesFile)}`
+  );
 }
 
 main();
