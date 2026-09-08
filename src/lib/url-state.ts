@@ -67,13 +67,16 @@ export function encodeViewState(s: ViewState, d: Defaults): string {
 
   // Three-state category model: "all" is the default and written as nothing;
   // an explicit empty selection has to be distinguishable from it, so it gets
-  // its own marker rather than an empty cats= that would decode as absent.
+  // its own marker rather than an empty categories= that would decode as absent.
   if (!f.allCategories) {
-    p.set("cats", f.selectedCategories.length ? f.selectedCategories.join(",") : "none");
+    p.set("categories", f.selectedCategories.length ? f.selectedCategories.join(",") : "none");
   }
 
   if (s.view !== "list") p.set("view", s.view);
-  if (s.sort !== d.sort) p.set("sort", s.sort);
+  // Sort only means something in list view — the calendar grid is inherently
+  // date-ordered. Omitting it keeps shared calendar links free of state that
+  // would have no visible effect for the recipient.
+  if (s.view === "list" && s.sort !== d.sort) p.set("sort", s.sort);
   if (s.view === "calendar") {
     if (s.calendarMode !== "week") p.set("cal", s.calendarMode);
     if (s.calendarDate) p.set("on", s.calendarDate);
@@ -90,7 +93,7 @@ export function decodeViewState(
   const p = new URLSearchParams(search);
   const hadParams = [...p.keys()].length > 0;
 
-  const cats = p.get("cats");
+  const cats = p.get("categories");
   let allCategories = defaults.allCategories;
   let selectedCategories: Category[] = defaults.selectedCategories;
   if (cats === "none") {
@@ -98,7 +101,7 @@ export function decodeViewState(
     selectedCategories = [];
   } else if (cats) {
     const parsed = cats.split(",").filter(isCategory);
-    // A cats= list that survives none of the validation means the link is
+    // A categories= list that survives none of the validation means the link is
     // from an older taxonomy. Fall back to "all" rather than showing nothing.
     if (parsed.length) {
       allCategories = false;
