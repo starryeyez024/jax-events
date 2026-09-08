@@ -356,9 +356,18 @@ function MonthGrid({
   byDate: Map<string, EventWithExtras[]>;
   today: Date;
 }) {
-  // Which day cell is showing its full event list. Only one at a time —
-  // expanding several at once makes the grid jump around unpredictably.
-  const [expanded, setExpanded] = useState<string | null>(null);
+  // Which day cells are showing their full event list. A set, not a single
+  // key: expanding one day must not collapse another the user already opened.
+  // Comparing two busy days means having both open at once.
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
+
+  function toggleDay(key: string) {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (!next.delete(key)) next.add(key);
+      return next;
+    });
+  }
 
   return (
     <>
@@ -374,7 +383,7 @@ function MonthGrid({
           const dayEvents = byDate.get(dayKey(cell.date)) ?? [];
           const isToday = cell.date.toDateString() === today.toDateString();
           const key = dayKey(cell.date);
-          const isExpanded = expanded === key;
+          const isExpanded = expanded.has(key);
           // Collapsed cells are a fixed height so the grid stays even; an
           // expanded one grows to fit, taking its whole row with it.
           return (
@@ -415,7 +424,7 @@ function MonthGrid({
                 {dayEvents.length > 3 && (
                   <button
                     type="button"
-                    onClick={() => setExpanded(isExpanded ? null : key)}
+                    onClick={() => toggleDay(key)}
                     className="w-full text-left px-1 rounded text-slate-500 hover:text-slate-900 hover:bg-slate-100 hover:underline transition"
                     aria-expanded={isExpanded}
                   >
