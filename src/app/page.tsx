@@ -239,7 +239,7 @@ export default function Home() {
             Wavelength
           </h1>
           <p className="text-base text-slate-700 mt-2 font-medium">
-            Events on your wavelength · Jacksonville Beach
+            Events on your wavelength · Jacksonville
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap justify-end">
