@@ -238,12 +238,16 @@ export function EventCard({ event, onChange, onShowToast }: Props) {
                 : "Far"}
               {event.city ? ` · ${event.city}` : ""}
             </span>
-            {event.drive_miles != null && (
+            {/* Measured from a single fixed origin, which is only meaningful
+                to someone starting there. A public visitor could be anywhere
+                in the city, so the figure would be misleading rather than
+                useful — hence local-only. */}
+            {!READ_ONLY && event.drive_miles != null && (
               <span
                 className="px-2 py-0.5 rounded-full bg-sand-50 text-slate-500 text-[11px]"
                 title={
                   event.drive_precise
-                    ? "Estimated driving distance from 915 8th Ave S, Jax Beach"
+                    ? "Estimated driving distance from Beach Blvd & 3rd St S, Jax Beach"
                     : "Approximate — city-center used because the venue has no exact coordinates"
                 }
               >

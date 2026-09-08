@@ -1,4 +1,4 @@
-// City-based distance buckets relative to your home in Jacksonville Beach, FL.
+// City-based distance buckets relative to Beach Blvd & 3rd St S, Jacksonville Beach.
 //
 // We don't have lat/lon for every event upstream — most sources only give a
 // city name (or sometimes nothing). So we classify cities into 4 buckets and
@@ -209,8 +209,13 @@ export function bucketsUpTo(b: DistanceBucket): DistanceBucket[] {
 // time. This is intentionally approximate — for exact ETA, click through
 // the Google Maps link on the card.
 
-const HOME_LAT = Number(process.env.HOME_LAT ?? 30.2867); // 915 8th Ave S, Jax Beach
-const HOME_LON = Number(process.env.HOME_LON ?? -81.3934);
+// Origin for every distance estimate: the corner of Beach Blvd & 3rd St S in
+// Jacksonville Beach. A public intersection rather than any address, and
+// central enough to the beaches that the buckets still sort sensibly.
+// Coordinates are the centre of the junction — both roads are divided, so
+// OSM has four corner nodes and this is their midpoint.
+const HOME_LAT = Number(process.env.HOME_LAT ?? 30.2883);
+const HOME_LON = Number(process.env.HOME_LON ?? -81.3918);
 const KM_PER_MILE = 1.60934;
 const EARTH_RADIUS_KM = 6371;
 const ROAD_FACTOR = 1.25;        // routes aren't straight lines
@@ -296,7 +301,7 @@ export function mapLinkForAddress(parts: Array<string | null | undefined>): stri
 export function directionsLink(parts: Array<string | null | undefined>): string | null {
   const text = parts.filter(Boolean).join(", ").trim();
   if (!text) return null;
-  const origin = encodeURIComponent("915 8th Ave S, Jacksonville Beach, FL 32250");
+  const origin = encodeURIComponent("Beach Blvd & 3rd St S, Jacksonville Beach, FL 32250");
   return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${encodeURIComponent(
     text
   )}&travelmode=driving`;

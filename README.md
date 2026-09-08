@@ -81,7 +81,7 @@ The **Driving radius** filter in the sidebar hard-filters to events in or below 
 
 Distance penalties are stronger for Meetups (small events) and lighter for destination venues like Florida Theatre or Daily's Place — those "earn" the drive.
 
-Each card also shows an **approximate drive distance** from `915 8th Ave S, Jacksonville Beach, FL 32250` (your default home — change via `HOME_LAT` / `HOME_LON` in `.env.local`). Values prefixed with `~` mean the venue had no exact coordinates and we used city-center as a fallback — click **Directions** on the card for Google's actual ETA. Tap the **📍 venue line** to open Google Maps, or **Directions** to start navigation.
+Each card also shows an **approximate drive distance** from the corner of `Beach Blvd & 3rd St S, Jacksonville Beach` (change via `HOME_LAT` / `HOME_LON` in `.env.local`). This readout is local-only — the public build hides it, since a distance measured from one fixed point is misleading to a visitor who could be anywhere. Values prefixed with `~` mean the venue had no exact coordinates and we used city-center as a fallback — click **Directions** on the card for Google's actual ETA. Tap the **📍 venue line** to open Google Maps, or **Directions** to start navigation.
 
 ### Five feedback states
 

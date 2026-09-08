@@ -43,8 +43,8 @@ jobs:
         env:
           TICKETMASTER_API_KEY: ${{ secrets.TICKETMASTER_API_KEY }}
           MEETUP_GROUPS: ${{ vars.MEETUP_GROUPS }}
-          HOME_LAT: "30.2867"
-          HOME_LON: "-81.3934"
+          HOME_LAT: "30.2883"
+          HOME_LON: "-81.3918"
 
       - name: Export snapshot
         run: npm run export
