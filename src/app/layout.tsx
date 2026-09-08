@@ -29,9 +29,36 @@ const sigmar = Sigmar({
   display: "swap",
 });
 
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://jax-events.vercel.app";
+
+const TITLE = "Wavelength — Jacksonville events";
+const DESCRIPTION =
+  "Free yoga, live music, markets, festivals and community events across Jacksonville, FL — pulled together from a dozen local calendars into one list.";
+
 export const metadata: Metadata = {
-  title: "Wavelength",
-  description: "Events on your wavelength — Jacksonville, FL",
+  // Required for the relative opengraph-image URL to resolve. Without it Next
+  // emits a relative og:image, which crawlers cannot fetch, and the card
+  // silently falls back to a bare title — which is what social previews were
+  // doing before.
+  metadataBase: new URL(SITE_URL),
+  title: TITLE,
+  description: DESCRIPTION,
+  openGraph: {
+    type: "website",
+    siteName: "Wavelength",
+    title: TITLE,
+    description: DESCRIPTION,
+    url: SITE_URL,
+    locale: "en_US",
+  },
+  twitter: {
+    // Wide card. The default "summary" crops to a small square and wastes the
+    // 1200x630 image entirely.
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+  },
   // Inline SVG favicon — calendar emoji rendered into a tiny SVG so we don't
   // ship a binary asset. Works in all modern browsers.
   icons: {
