@@ -31,7 +31,7 @@ const sigmar = Sigmar({
 
 export const metadata: Metadata = {
   title: "Wavelength",
-  description: "Events on your wavelength — Jacksonville",
+  description: "Events on your wavelength — Jacksonville, FL",
   // Inline SVG favicon — calendar emoji rendered into a tiny SVG so we don't
   // ship a binary asset. Works in all modern browsers.
   icons: {
