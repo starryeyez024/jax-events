@@ -8,6 +8,7 @@ import { CalendarView } from "@/components/CalendarView";
 import { Filters, type FilterState } from "@/components/Filters";
 import { TipModal } from "@/components/TipModal";
 import { UndoToast, type ToastState } from "@/components/UndoToast";
+import { ShareMenu } from "@/components/ShareMenu";
 import { READ_ONLY } from "@/lib/config";
 import { filterEvents } from "@/lib/filter-events";
 import { decodeViewState, encodeViewState, type Defaults } from "@/lib/url-state";
@@ -55,7 +56,7 @@ export default function Home() {
   // Until the URL has been read, don't write to it — otherwise the first
   // render would immediately overwrite an incoming shared link with defaults.
   const [hydrated, setHydrated] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // Read the incoming link once, on mount. Using window.location rather than
   // useSearchParams keeps this component out of Next's Suspense requirement
@@ -82,23 +83,44 @@ export default function Home() {
     window.history.replaceState(null, "", url);
   }, [hydrated, filters, view, sort, calendarMode, calendarDate, defaults]);
 
-  async function copyShareLink() {
+  function buildShareUrl(): string {
     const qs = encodeViewState(
       { filters, view, sort, calendarMode, calendarDate },
       defaults
     );
-    const url = `${window.location.origin}${window.location.pathname}${qs ? `?${qs}` : ""}`;
-    try {
-      await navigator.clipboard.writeText(url);
-    } catch {
-      // Clipboard API needs a secure context and permission; neither is
-      // guaranteed. Fall back to a prompt so the link is still copyable.
-      window.prompt("Copy this link:", url);
+    return `${window.location.origin}${window.location.pathname}${qs ? `?${qs}` : ""}`;
+  }
+
+  // Sort and view were two controls with an impossible combination between
+  // them: the calendar grid is laid out by date, so "Best match" had no
+  // meaning there. Presenting one control of three mutually exclusive
+  // choices removes the dead state instead of hiding it.
+  const viewControl: string = view === "calendar" ? "calendar" : sort;
+  function setViewControl(v: string) {
+    if (v === "calendar") {
+      setView("calendar");
       return;
     }
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setView("list");
+    setSort(v as SortMode);
   }
+
+  // Drives the badge on the collapsed-sidebar button, so filters narrowing
+  // the list stay visible after the panel they live in is hidden.
+  const activeFilterCount = useMemo(() => {
+    const d = DEFAULT_FILTERS;
+    let n = 0;
+    if (filters.search) n++;
+    if (!filters.allCategories) n++;
+    if (filters.freeOnly) n++;
+    if (filters.maxPrice != null) n++;
+    if (filters.includeRecurring !== d.includeRecurring) n++;
+    if (filters.includeMonthly !== d.includeMonthly) n++;
+    if (filters.hideUninterested !== d.hideUninterested) n++;
+    if (filters.maxDistance !== d.maxDistance) n++;
+    if (filters.from !== d.from || filters.to !== d.to) n++;
+    return n;
+  }, [filters]);
   const [events, setEvents] = useState<EventWithExtras[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -206,24 +228,6 @@ export default function Home() {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {!READ_ONLY && (
-            <SegmentedToggle
-              options={[
-                { value: "match", label: "Best match" },
-                { value: "chrono", label: "Chronological" },
-              ]}
-              value={sort}
-              onChange={(v) => setSort(v as SortMode)}
-            />
-          )}
-          <SegmentedToggle
-            options={[
-              { value: "list", label: "List" },
-              { value: "calendar", label: "Calendar" },
-            ]}
-            value={view}
-            onChange={(v) => setView(v as "list" | "calendar")}
-          />
-          {!READ_ONLY && (
             <button
               onClick={() => setTipOpen(true)}
               className="px-4 py-2 text-[12.8px] font-medium rounded-full border border-slate-200 bg-white/70 backdrop-blur hover:bg-white hover:border-slate-300 transition"
@@ -232,25 +236,7 @@ export default function Home() {
               ＋ Add tip
             </button>
           )}
-          <button
-            onClick={copyShareLink}
-            className={`px-4 py-2 text-[12.8px] font-medium rounded-full border transition ${
-              copied
-                ? "border-ocean-500 bg-ocean-50 text-ocean-700"
-                : "border-slate-200 bg-white/70 backdrop-blur hover:bg-white hover:border-slate-300"
-            }`}
-            title="Copy a link to exactly this view — same dates, filters and layout"
-          >
-            {copied ? "✓ Link copied" : "🔗 Share this view"}
-          </button>
-          <a
-            href="/api/calendar.ics?status=registered"
-            className="px-4 py-2 text-[12.8px] font-medium rounded-full border border-slate-200 bg-white/70 backdrop-blur hover:bg-white hover:border-slate-300 transition"
-            title="Download .ics of your registered events, or use this URL to subscribe in Google Calendar"
-            download
-          >
-            📅 Export
-          </a>
+          <ShareMenu getShareUrl={buildShareUrl} showIcsExport={!READ_ONLY} />
           {!READ_ONLY && (
             <button
               onClick={refreshScrapers}
@@ -272,17 +258,46 @@ export default function Home() {
       <UndoToast toast={toast} onDismiss={() => setToast(null)} />
 
 
-      <div className="grid md:grid-cols-[300px_1fr] gap-10">
-        <aside>
-          <Filters
-            value={filters}
-            onChange={setFilters}
-            count={events.length}
-            loading={loading}
-          />
-        </aside>
+      <div
+        className={`grid gap-10 ${
+          sidebarOpen ? "md:grid-cols-[300px_1fr]" : "md:grid-cols-1"
+        }`}
+      >
+        {sidebarOpen && (
+          <aside>
+            <Filters
+              value={filters}
+              onChange={setFilters}
+              count={events.length}
+              loading={loading}
+            />
+          </aside>
+        )}
 
         <main>
+          {/* Sits with the content it controls rather than up in the header,
+              where it read as site chrome. */}
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <button
+              onClick={() => setSidebarOpen((v) => !v)}
+              className="px-3 py-2 text-[12.8px] font-medium rounded-full border border-slate-200 bg-white/70 backdrop-blur hover:bg-white hover:border-slate-300 transition"
+              aria-expanded={sidebarOpen}
+              title={sidebarOpen ? "Hide the filter panel" : "Show the filter panel"}
+            >
+              {sidebarOpen ? "◀ Hide filters" : `☰ Filters${activeFilterCount ? ` (${activeFilterCount})` : ""}`}
+            </button>
+
+            <SegmentedToggle
+              options={[
+                ...(READ_ONLY ? [] : [{ value: "match", label: "Best match" }]),
+                { value: "chrono", label: "Chronological" },
+                { value: "calendar", label: "Calendar" },
+              ]}
+              value={viewControl}
+              onChange={setViewControl}
+            />
+          </div>
+
           {view === "list" ? (
             <>
               {!READ_ONLY && (

@@ -202,16 +202,6 @@ export function CalendarView({
         >
           📅 Registered ({counts.registered})
         </button>
-        <a
-          href="/api/calendar.ics?status=registered"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="ml-auto text-xs text-slate-600 underline hover:text-ocean-700"
-          title="Subscribe in Google Calendar with this URL, or click to download .ics"
-          download
-        >
-          ⬇ Export registered (.ics)
-        </a>
       </div>
 
       {mode === "week" ? (
