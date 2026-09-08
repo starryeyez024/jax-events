@@ -13,7 +13,6 @@
 import type { EventWithExtras } from "./db";
 import type { FilterState } from "@/components/Filters";
 import { priceBandFor } from "./price-estimate";
-import { isProceduralMeeting } from "./non-events";
 import { bucketsUpTo } from "./distance";
 import { eventTypeFor } from "./event-type";
 
@@ -74,8 +73,6 @@ export function filterEvents(
     if (allowedBuckets && !allowedBuckets.has(e.distance_bucket)) return false;
 
     if (f.includeMonthly === false && eventTypeFor(e) === "monthly") return false;
-
-    if (f.includeProcedural === false && isProceduralMeeting(e.title)) return false;
 
     return true;
   });

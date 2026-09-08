@@ -3,6 +3,7 @@ import path from "node:path";
 import fs from "node:fs";
 import { CATEGORIES, DEFAULT_WEIGHTS, type Category } from "./categories";
 import { metaForSource, type SourceStatus } from "./sources";
+import { isProceduralMeeting } from "./non-events";
 import type { DistanceBucket } from "./distance";
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -297,7 +298,17 @@ export function upsertEvent(db: Database.Database, e: EventInput): string {
   const delCats = db.prepare("DELETE FROM event_categories WHERE event_id = ?");
   const insCat = db.prepare("INSERT INTO event_categories (event_id, category) VALUES (?, ?)");
   delCats.run(id);
-  for (const c of e.categories) insCat.run(id, c);
+  // Derived rather than per-scraper: committee and commission business comes
+  // through several city feeds, and tagging it here means every source — plus
+  // hand-entered tips — is classified by one rule.
+  // Replaces rather than adds. The category filter is an OR across an
+  // event's categories, so a procedural meeting that also carried
+  // "uncategorized" would survive unchecking the Govt Meetings chip — the
+  // chip has to be the event's only category for it to actually filter.
+  const cats = isProceduralMeeting(e.title)
+    ? new Set<Category>(["govt-meeting"])
+    : new Set<Category>(e.categories);
+  for (const c of cats) insCat.run(id, c);
 
   return id;
 }

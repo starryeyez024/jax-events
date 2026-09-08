@@ -30,8 +30,6 @@ export type FilterState = {
   priceBands: PriceBand[];
   includeRecurring: boolean;
   includeMonthly: boolean;
-  /** Standing committee/commission business. Off by default. */
-  includeProcedural: boolean;
   hideUninterested: boolean;
   maxDistance: DistanceBucket;
   from: string;
@@ -221,11 +219,6 @@ export function Filters({
             checked={value.includeMonthly}
             onChange={(b) => onChange({ ...value, includeMonthly: b })}
             label="Include 🔁 monthly"
-          />
-          <FilterCheckbox
-            checked={value.includeProcedural}
-            onChange={(b) => onChange({ ...value, includeProcedural: b })}
-            label="Include 🏛 govt meetings"
           />
           {/* 👎 is a personalization signal; read-only builds cannot set one. */}
           {!READ_ONLY && (

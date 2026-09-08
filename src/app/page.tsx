@@ -36,9 +36,6 @@ const DEFAULT_FILTERS: FilterState = {
   priceBands: ["free", "unknown"],
   includeRecurring: true,
   includeMonthly: true,
-  // Standing committee and commission business is public and attendable, but
-  // it is not what anyone is browsing for. Off by default, one click to see.
-  includeProcedural: false,
   hideUninterested: true,
   // The public build has no radius control (see Filters.tsx), so it must not
   // default to a narrowing value — a hidden filter quietly dropping events is
@@ -151,7 +148,6 @@ export default function Home() {
         !filters.priceBands.every((b) => d.priceBands.includes(b))) n++;
     if (filters.includeRecurring !== d.includeRecurring) n++;
     if (filters.includeMonthly !== d.includeMonthly) n++;
-    if (filters.includeProcedural !== d.includeProcedural) n++;
     if (filters.hideUninterested !== d.hideUninterested) n++;
     if (filters.maxDistance !== d.maxDistance) n++;
     if (filters.from !== d.from || filters.to !== d.to) n++;
@@ -181,7 +177,6 @@ export default function Home() {
     for (const b of filters.priceBands) sp.append("price", b);
     if (!filters.includeRecurring) sp.set("includeRecurring", "0");
     if (!filters.includeMonthly) sp.set("includeMonthly", "0");
-    if (filters.includeProcedural) sp.set("includeProcedural", "1");
     if (filters.hideUninterested) sp.set("hideUninterested", "1");
     if (filters.maxDistance) sp.set("maxDistance", filters.maxDistance);
     if (filters.search) sp.set("q", filters.search);

@@ -55,7 +55,7 @@ export const CATEGORY_GROUPS = [
   {
     label: "Other",
     pastel: "sage",
-    categories: ["uncategorized"],
+    categories: ["uncategorized", "govt-meeting"],
   },
 ] as const;
 
@@ -152,6 +152,9 @@ export const DEFAULT_WEIGHTS: Record<Category, number> = {
   // 'experiential' (which earns a +15 bonus and should be reserved for things
   // that genuinely are participatory).
   uncategorized: 0,
+  // Public and attendable, but procedural. Weighted well below anything
+  // anyone browses for, so Best match buries it without hiding it.
+  "govt-meeting": -60,
 
   // mild negative — you'd rather not, but not zero
   "market-shopping": -20,
@@ -188,6 +191,7 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   "kids-family": "Family",
   sports: "Sports",
   uncategorized: "Other",
+  "govt-meeting": "Govt Meetings",
 };
 
 // Emoji icons for quick visual scanning. Kept intentionally consistent so
@@ -223,6 +227,7 @@ export const CATEGORY_ICONS: Record<Category, string> = {
   "kids-family": "👨‍👩‍👧",
   sports: "⚽",
   uncategorized: "📄",
+  "govt-meeting": "🏛️",
 };
 
 // Pick the single most representative icon for an event with multiple categories.

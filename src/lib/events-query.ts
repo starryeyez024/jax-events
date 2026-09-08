@@ -1,7 +1,6 @@
 import type Database from "better-sqlite3";
 import type { Category } from "./categories";
 import { priceBandFor, type PriceBand } from "./price-estimate";
-import { isProceduralMeeting } from "./non-events";
 import { type EventRow, type EventWithExtras } from "./db";
 import {
   loadPreferences,
@@ -25,7 +24,6 @@ export type EventFilters = {
   categories?: Category[];
   noCategories?: boolean; // explicit "show no events" — distinct from undefined (no filter)
   priceBands?: PriceBand[];
-  includeProcedural?: boolean;
   includeRecurring?: boolean;
   hideUninterested?: boolean;
   maxDistance?: DistanceBucket;
@@ -210,10 +208,6 @@ export function queryEvents(db: Database.Database, filters: EventFilters): Event
   if (filters.priceBands) {
     const allow = new Set(filters.priceBands);
     out = out.filter((e) => allow.has(priceBandFor(e)));
-  }
-  // Title-based, so it cannot be expressed as a sane SQL predicate.
-  if (filters.includeProcedural === false) {
-    out = out.filter((e) => !isProceduralMeeting(e.title));
   }
   return out;
 }
