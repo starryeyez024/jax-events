@@ -58,6 +58,28 @@ export default function Home() {
   const [hydrated, setHydrated] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
+  // Restore the collapse preference after mount. Reading localStorage during
+  // the initial render would desync server and client markup and trip
+  // hydration, so it happens in an effect like the URL read below.
+  useEffect(() => {
+    if (window.localStorage.getItem("wavelength:filters-collapsed") === "1") {
+      setSidebarOpen(false);
+    }
+  }, []);
+
+  function toggleSidebar() {
+    setSidebarOpen((v) => {
+      const next = !v;
+      try {
+        window.localStorage.setItem("wavelength:filters-collapsed", next ? "0" : "1");
+      } catch {
+        // Private-mode Safari throws on setItem; the toggle still works, it
+        // just won't be remembered.
+      }
+      return next;
+    });
+  }
+
   // Read the incoming link once, on mount. Using window.location rather than
   // useSearchParams keeps this component out of Next's Suspense requirement
   // for static rendering, which the read-only export depends on.
@@ -259,38 +281,34 @@ export default function Home() {
       <UndoToast toast={toast} onDismiss={() => setToast(null)} />
 
 
-      <div
-        className={`grid gap-10 ${
-          sidebarOpen ? "md:grid-cols-[300px_1fr]" : "md:grid-cols-1"
-        }`}
-      >
-        {sidebarOpen && (
-          <aside>
+      {/* Flex rather than a grid whose column count changes: the aside stays
+          mounted and animates its width, so collapsing slides the content over
+          instead of snapping it 300px. On mobile the column is full-width and
+          the panel simply behaves as an accordion. */}
+      <div className="flex flex-col md:flex-row gap-6 md:gap-10">
+        <aside
+          className={`shrink-0 overflow-hidden transition-[width] duration-300 ease-out motion-reduce:transition-none w-full ${
+            sidebarOpen ? "md:w-[300px]" : "md:w-[56px]"
+          }`}
+        >
+          {/* Pinned to the viewport so the trigger stays reachable when the
+              results column is long. */}
+          <div className="md:sticky md:top-6">
             <Filters
               value={filters}
               onChange={setFilters}
-              onCollapse={() => setSidebarOpen(false)}
+              collapsed={!sidebarOpen}
+              onToggle={toggleSidebar}
+              activeFilterCount={activeFilterCount}
             />
-          </aside>
-        )}
+          </div>
+        </aside>
 
-        <main>
+        <main className="flex-1 min-w-0">
           {/* Sits with the content it controls rather than up in the header,
               where it read as site chrome. */}
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
             <div className="flex items-center gap-3">
-              {/* Only rendered while the panel is hidden — when it's open, the
-                  collapse control lives inside the panel itself. */}
-              {!sidebarOpen && (
-                <button
-                  onClick={() => setSidebarOpen(true)}
-                  className="px-3 py-2 text-[12.8px] font-medium rounded-full border border-slate-200 bg-white/70 backdrop-blur hover:bg-white hover:border-slate-300 transition"
-                  aria-expanded={false}
-                  title="Show the filter panel"
-                >
-                  ☰ Filters{activeFilterCount ? ` (${activeFilterCount})` : ""}
-                </button>
-              )}
               <div className="font-display text-3xl font-medium text-slate-900 tracking-tight leading-none">
                 {loading ? (
                   <span className="text-slate-400">Loading…</span>
