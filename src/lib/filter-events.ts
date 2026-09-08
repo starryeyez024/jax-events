@@ -12,6 +12,7 @@
 
 import type { EventWithExtras } from "./db";
 import type { FilterState } from "@/components/Filters";
+import { priceBandFor } from "./price-estimate";
 import { bucketsUpTo } from "./distance";
 import { eventTypeFor } from "./event-type";
 
@@ -52,11 +53,10 @@ export function filterEvents(
     }
     if (toIso && !(e.starts_at < toIso)) return false;
 
-    if (f.freeOnly) {
-      if (e.price_min !== 0) return false;
-    } else if (typeof f.maxPrice === "number") {
-      if (!(e.price_min == null || e.price_min <= f.maxPrice)) return false;
-    }
+    // Bands are computed from the same figure the card shows, so the filter
+    // and the card can never disagree. An empty selection means "show none",
+    // matching how the category filter treats an empty subset.
+    if (!f.priceBands.includes(priceBandFor(e))) return false;
 
     if (f.includeRecurring === false && e.is_recurring !== 0) return false;
 

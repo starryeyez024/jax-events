@@ -5,22 +5,34 @@
 // apply a flat penalty per bucket. For cities we DO have rough lat/lon for,
 // we also compute an approximate driving distance + time from your home.
 
-export type DistanceBucket = "local" | "nearby" | "drive" | "far";
+// Three buckets, not four. Everything inside the Jacksonville metro is one
+// thing to a person planning an evening — splitting "local" from "nearby"
+// implied a distinction the events do not have (every upcoming event is
+// currently Jax metro), so Jax metro IS "nearby" and the old 1-3hr and 3hr+
+// tiers collapse into a single "far".
+export type DistanceBucket = "nearby" | "hour" | "far";
 
 export const BUCKET_LABELS: Record<DistanceBucket, string> = {
-  local: "Local (Jax metro)",
-  nearby: "Nearby (≤ ~1 hr)",
-  drive: "Drive (~1–3 hr)",
-  far: "Far (3+ hr)",
+  nearby: "Nearby (Jacksonville metro)",
+  hour: "~1 hr drive (St Augustine, Fernandina, Orange Park…)",
+  far: "Far (Orlando, Gainesville, Savannah…)",
 };
 
-export const BUCKET_ORDER: DistanceBucket[] = ["local", "nearby", "drive", "far"];
+/** Short forms for the slider ticks. */
+export const BUCKET_SHORT: Record<DistanceBucket, string> = {
+  nearby: "nearby",
+  hour: "~1hr drive",
+  far: "far",
+};
 
+export const BUCKET_ORDER: DistanceBucket[] = ["nearby", "hour", "far"];
+
+// "far" sits between the old drive (-15) and far (-30): the two tiers merged,
+// so the penalty is the middle of what they used to be.
 const BASE_PENALTY: Record<DistanceBucket, number> = {
-  local: 0,
-  nearby: -3,
-  drive: -15,
-  far: -30,
+  nearby: 0,
+  hour: -3,
+  far: -22,
 };
 
 function sourceModifier(source: string): number {
@@ -172,17 +184,17 @@ export function bucketFor(
 ): DistanceBucket {
   if (city) {
     const c = NORM(city);
-    if (LOCAL.has(c)) return "local";
-    if (NEARBY.has(c)) return "nearby";
-    if (DRIVE.has(c)) return "drive";
+    if (LOCAL.has(c)) return "nearby";
+    if (NEARBY.has(c)) return "hour";
+    if (DRIVE.has(c)) return "far";
     if (FAR.has(c)) return "far";
   }
   if (haystack) {
     const h = NORM(haystack);
     for (const c of FAR) if (h.includes(c)) return "far";
-    for (const c of LOCAL) if (h.includes(c)) return "local";
-    for (const c of NEARBY) if (h.includes(c)) return "nearby";
-    for (const c of DRIVE) if (h.includes(c)) return "drive";
+    for (const c of LOCAL) if (h.includes(c)) return "nearby";
+    for (const c of NEARBY) if (h.includes(c)) return "hour";
+    for (const c of DRIVE) if (h.includes(c)) return "far";
   }
   return "far";
 }

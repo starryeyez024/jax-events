@@ -8,17 +8,9 @@ import {
   PASTEL_CHIP_ACTIVE_CLASSES,
   type Category,
 } from "@/lib/categories";
-import { BUCKET_LABELS, BUCKET_ORDER, type DistanceBucket } from "@/lib/distance";
+import { BUCKET_LABELS, BUCKET_SHORT, BUCKET_ORDER, type DistanceBucket } from "@/lib/distance";
+import { PRICE_BANDS, PRICE_BAND_LABELS, type PriceBand } from "@/lib/price-estimate";
 import { READ_ONLY } from "@/lib/config";
-
-// Short, scannable labels for the slider tick row. The full description still
-// lives in BUCKET_LABELS and is wired up as a tooltip on each tick.
-const BUCKET_SHORT_LABEL: Record<DistanceBucket, string> = {
-  local: "local",
-  nearby: "nearby",
-  drive: "~hr drive",
-  far: "far",
-};
 
 export type FilterState = {
   search: string;
@@ -29,8 +21,13 @@ export type FilterState = {
   // This three-state model is the only way to distinguish "all" from "none"
   // when the user toggles Select all off without picking any chips.
   allCategories: boolean;
-  freeOnly: boolean;
-  maxPrice: number | null;
+  /**
+   * Which price bands to show. Multi-select rather than a slider: only 197
+   * of 721 events have a real price, so a continuum implied precision the
+   * data cannot support, and "unknown" — the largest group — has no place
+   * on a monotonic axis.
+   */
+  priceBands: PriceBand[];
   includeRecurring: boolean;
   includeMonthly: boolean;
   hideUninterested: boolean;
@@ -209,11 +206,35 @@ export function Filters({
           </label>
         </div>
 
+        {/* These qualify the date range directly above — an evergreen listing
+            has no single date, and a monthly series only touches the window
+            once — so they belong with it rather than down beside price. */}
+        <div className="flex flex-wrap gap-x-3 gap-y-2 text-xs text-slate-700">
+          <FilterCheckbox
+            checked={value.includeRecurring}
+            onChange={(b) => onChange({ ...value, includeRecurring: b })}
+            label="Include 📍 evergreen"
+          />
+          <FilterCheckbox
+            checked={value.includeMonthly}
+            onChange={(b) => onChange({ ...value, includeMonthly: b })}
+            label="Include 🔁 monthly"
+          />
+          {/* 👎 is a personalization signal; read-only builds cannot set one. */}
+          {!READ_ONLY && (
+            <FilterCheckbox
+              checked={value.hideUninterested}
+              onChange={(b) => onChange({ ...value, hideUninterested: b })}
+              label="Hide 👎"
+            />
+          )}
+        </div>
+
         <div className="text-xs">
           <div className="flex justify-between items-center mb-1.5">
             <span className="text-slate-500 font-medium uppercase tracking-wider text-[10px]">Driving radius</span>
             <span className="font-medium text-slate-700" title={BUCKET_LABELS[value.maxDistance]}>
-              {BUCKET_SHORT_LABEL[value.maxDistance]}
+              {BUCKET_SHORT[value.maxDistance]}
             </span>
           </div>
           <input
@@ -244,60 +265,48 @@ export function Filters({
                 }`}
                 title={BUCKET_LABELS[b]}
               >
-                {BUCKET_SHORT_LABEL[b]}
+                {BUCKET_SHORT[b]}
               </button>
             ))}
           </div>
         </div>
 
-        <div className="text-xs">
-          <div className="flex justify-between items-center mb-1.5">
-            <span className="text-slate-500 font-medium uppercase tracking-wider text-[10px]">Max price</span>
-            <span className="font-medium text-slate-700">
-              {value.maxPrice == null ? "Any" : `$${value.maxPrice}`}
-            </span>
+        <div>
+          <div className="flex items-baseline justify-between mb-2">
+            <span className="text-slate-500 font-medium uppercase tracking-wider text-[10px]">Price</span>
           </div>
-          <input
-            type="range"
-            min={0}
-            max={200}
-            step={5}
-            className="w-full accent-slate-900"
-            value={value.maxPrice ?? 200}
-            onChange={(e) => {
-              const v = Number(e.target.value);
-              onChange({ ...value, maxPrice: v >= 200 ? null : v });
-            }}
-          />
-        </div>
-
-        <div className="flex flex-wrap gap-x-3 gap-y-2 text-xs text-slate-700">
-          <FilterCheckbox
-            checked={value.freeOnly}
-            onChange={(b) => onChange({ ...value, freeOnly: b })}
-            label="Free only"
-          />
-          {/* 👎 is a personalization signal, and read-only builds have no way
-              to set one — filterEvents treats hideUninterested as a no-op
-              there. Showing the checkbox promised a filter that could never
-              do anything. */}
-          {!READ_ONLY && (
-            <FilterCheckbox
-              checked={value.hideUninterested}
-              onChange={(b) => onChange({ ...value, hideUninterested: b })}
-              label="Hide 👎"
-            />
-          )}
-          <FilterCheckbox
-            checked={value.includeRecurring}
-            onChange={(b) => onChange({ ...value, includeRecurring: b })}
-            label="Include 📍 evergreen"
-          />
-          <FilterCheckbox
-            checked={value.includeMonthly}
-            onChange={(b) => onChange({ ...value, includeMonthly: b })}
-            label="Include 🔁 monthly"
-          />
+          <div className="flex flex-wrap gap-1.5">
+            {PRICE_BANDS.map((b) => {
+              const on = value.priceBands.includes(b);
+              return (
+                <button
+                  key={b}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() =>
+                    onChange({
+                      ...value,
+                      priceBands: on
+                        ? value.priceBands.filter((x) => x !== b)
+                        : [...value.priceBands, b],
+                    })
+                  }
+                  className={`px-3 py-1 rounded-full text-xs font-medium border transition ${
+                    on
+                      ? "bg-slate-900 text-white border-slate-900"
+                      : "bg-sand-50 text-slate-600 border-slate-200 hover:border-slate-300"
+                  }`}
+                  title={
+                    b === "unknown"
+                      ? "Most sources don't publish a price — these are events we simply don't know about"
+                      : undefined
+                  }
+                >
+                  {PRICE_BAND_LABELS[b]}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <div>

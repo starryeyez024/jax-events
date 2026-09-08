@@ -179,9 +179,8 @@ export function EventCard({ event, onChange, onShowToast }: Props) {
       : "bg-sand-50 text-slate-500";
 
   const bucketChip = {
-    local: "bg-pastel-mint/60 text-pastel-ink-mint",
-    nearby: "bg-pastel-sky/60 text-pastel-ink-sky",
-    drive: "bg-pastel-butter/60 text-pastel-ink-butter",
+    nearby: "bg-pastel-mint/60 text-pastel-ink-mint",
+    hour: "bg-pastel-butter/60 text-pastel-ink-butter",
     far: "bg-pastel-blush/60 text-pastel-ink-blush",
   }[event.distance_bucket];
 
@@ -229,12 +228,10 @@ export function EventCard({ event, onChange, onShowToast }: Props) {
               className={`px-2 py-0.5 rounded-full text-[11px] ${bucketChip}`}
               title={BUCKET_LABELS[event.distance_bucket]}
             >
-              {event.distance_bucket === "local"
-                ? "Local"
-                : event.distance_bucket === "nearby"
+              {event.distance_bucket === "nearby"
                 ? "Nearby"
-                : event.distance_bucket === "drive"
-                ? "Drive"
+                : event.distance_bucket === "hour"
+                ? "~1 hr"
                 : "Far"}
               {event.city ? ` · ${event.city}` : ""}
             </span>

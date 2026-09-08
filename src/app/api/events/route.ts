@@ -2,9 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { queryEvents } from "@/lib/events-query";
 import { isCategory, type Category } from "@/lib/categories";
+import { PRICE_BANDS, type PriceBand } from "@/lib/price-estimate";
 import { BUCKET_ORDER, type DistanceBucket } from "@/lib/distance";
 
 export const dynamic = "force-dynamic";
+
+function isPriceBand(s: string): s is PriceBand {
+  return (PRICE_BANDS as string[]).includes(s);
+}
 
 function isBucket(s: string): s is DistanceBucket {
   return (BUCKET_ORDER as readonly string[]).includes(s);
@@ -21,8 +26,7 @@ export async function GET(req: NextRequest) {
     to: sp.get("to") ?? undefined,
     categories: cats.length ? cats : undefined,
     noCategories: sp.get("noCategories") === "1",
-    maxPrice: sp.get("maxPrice") ? Number(sp.get("maxPrice")) : undefined,
-    freeOnly: sp.get("freeOnly") === "1",
+    priceBands: sp.getAll("price").filter(isPriceBand),
     includeRecurring: sp.get("includeRecurring") !== "0",
     includeMonthly: sp.get("includeMonthly") !== "0",
     hideUninterested: sp.get("hideUninterested") === "1",

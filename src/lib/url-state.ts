@@ -15,6 +15,7 @@
 
 import { isCategory, type Category } from "./categories";
 import { BUCKET_ORDER, type DistanceBucket } from "./distance";
+import { PRICE_BANDS, type PriceBand } from "./price-estimate";
 import type { FilterState } from "@/components/Filters";
 
 export type ViewState = {
@@ -33,8 +34,7 @@ export function defaultFilters(from: string, to: string): FilterState {
     search: "",
     selectedCategories: [],
     allCategories: true,
-    freeOnly: false,
-    maxPrice: null,
+    priceBands: ["free", "paid", "unknown"],
     includeRecurring: false,
     includeMonthly: true,
     hideUninterested: true,
@@ -58,8 +58,11 @@ export function encodeViewState(s: ViewState, d: Defaults): string {
   if (f.from !== defaults.from) p.set("from", f.from);
   if (f.to !== defaults.to) p.set("to", f.to);
   if (f.search) p.set("q", f.search);
-  if (f.freeOnly) p.set("free", "1");
-  if (f.maxPrice != null) p.set("maxPrice", String(f.maxPrice));
+  // Only written when it differs from the default set; order-insensitive so
+  // toggling a band off and back on doesn't churn the URL.
+  if (!sameBands(f.priceBands, defaults.priceBands)) {
+    p.set("price", f.priceBands.length ? [...f.priceBands].sort().join(",") : "none");
+  }
   if (f.includeRecurring !== defaults.includeRecurring) p.set("recurring", f.includeRecurring ? "1" : "0");
   if (f.includeMonthly !== defaults.includeMonthly) p.set("monthly", f.includeMonthly ? "1" : "0");
   if (f.hideUninterested !== defaults.hideUninterested) p.set("hideDown", f.hideUninterested ? "1" : "0");
@@ -117,8 +120,7 @@ export function decodeViewState(
         from: isoDate(p.get("from")) ?? defaults.from,
         to: isoDate(p.get("to")) ?? defaults.to,
         search: p.get("q") ?? "",
-        freeOnly: p.get("free") === "1",
-        maxPrice: numberOrNull(p.get("maxPrice")),
+        priceBands: decodeBands(p, defaults.priceBands),
         includeRecurring: bool(p.get("recurring"), defaults.includeRecurring),
         includeMonthly: bool(p.get("monthly"), defaults.includeMonthly),
         hideUninterested: bool(p.get("hideDown"), defaults.hideUninterested),
@@ -140,14 +142,30 @@ function bool(v: string | null, fallback: boolean): boolean {
   return fallback;
 }
 
-function numberOrNull(v: string | null): number | null {
-  if (v == null) return null;
-  const n = Number(v);
-  return Number.isFinite(n) && n >= 0 ? n : null;
+function sameBands(a: PriceBand[], b: PriceBand[]): boolean {
+  return a.length === b.length && [...a].sort().join() === [...b].sort().join();
 }
 
+function decodeBands(p: URLSearchParams, fallback: PriceBand[]): PriceBand[] {
+  const raw = p.get("price");
+  // Legacy links: free=1 was the old "Free only" checkbox.
+  if (raw == null) return p.get("free") === "1" ? ["free"] : fallback;
+  if (raw === "none") return [];
+  const parsed = raw.split(",").filter((x): x is PriceBand =>
+    (PRICE_BANDS as string[]).includes(x)
+  );
+  return parsed.length ? parsed : fallback;
+}
+
+const LEGACY_BUCKETS: Record<string, DistanceBucket> = {
+  local: "nearby",   // the old 4-bucket scale split Jax metro out as "local"
+  drive: "far",      // and split 1-3hr from 3hr+; both are now "far"
+};
+
 function bucket(v: string | null): DistanceBucket | null {
-  return v && (BUCKET_ORDER as readonly string[]).includes(v) ? (v as DistanceBucket) : null;
+  if (!v) return null;
+  if ((BUCKET_ORDER as readonly string[]).includes(v)) return v as DistanceBucket;
+  return LEGACY_BUCKETS[v] ?? null;
 }
 
 /** Accept only YYYY-MM-DD that names a real date. */

@@ -95,3 +95,36 @@ export function priceDisplayFor(event: EventWithExtras): PriceDisplay {
   }
   return { text: "", isEstimate: false };
 }
+
+// ----- Filtering -----
+
+export type PriceBand = "free" | "paid" | "unknown";
+export const PRICE_BANDS: PriceBand[] = ["free", "paid", "unknown"];
+export const PRICE_BAND_LABELS: Record<PriceBand, string> = {
+  free: "Free",
+  paid: "Paid",
+  unknown: "Price unknown",
+};
+
+/**
+ * Which band an event falls in, using the SAME figure the card displays.
+ *
+ * The filter used to read price_min directly while the card showed
+ * estimatePrice(), so "Free only" and a card reading "Free" disagreed. Only
+ * 197 of 721 events carry a real price, so filtering on the raw column alone
+ * is filtering on mostly-null data.
+ */
+export function priceBandFor(event: EventWithExtras): PriceBand {
+  // Mirror priceDisplayFor's rules exactly. "Free" is only claimed when the
+  // card claims it — a $0-$20 event is a range on the card, so banding it
+  // free would recreate the disagreement this function exists to remove.
+  if (event.price_min === 0 && (event.price_max === 0 || event.price_max == null)) {
+    return "free";
+  }
+  if (event.price_min != null) return "paid";
+
+  const est = estimatePrice(event);
+  if (est.kind === "free") return "free";
+  if (est.kind === "range") return "paid";
+  return "unknown";
+}

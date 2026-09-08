@@ -30,8 +30,10 @@ const DEFAULT_FILTERS: FilterState = {
   search: "",
   selectedCategories: [],
   allCategories: true,
-  freeOnly: false,
-  maxPrice: null,
+  // Free + unknown by default: "default to free" per the ask, but without
+  // silently hiding the 248 events whose price nobody publishes — that would
+  // be narrowing the list on missing data rather than on a real signal.
+  priceBands: ["free", "unknown"],
   includeRecurring: false,
   includeMonthly: true,
   hideUninterested: true,
@@ -58,10 +60,14 @@ export default function Home() {
   const [hydrated, setHydrated] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  // Restore the collapse preference after mount. Reading localStorage during
-  // the initial render would desync server and client markup and trip
-  // hydration, so it happens in an effect like the URL read below.
+  // Restore the collapse preference after mount, but only in the personalized
+  // build. On the public site this was surprising: one visitor collapsing the
+  // panel once left it collapsed on every later visit, with nothing on screen
+  // explaining why the filters had vanished. A public page should open in a
+  // known state. (Reading localStorage during render would also desync server
+  // and client markup and trip hydration, hence the effect.)
   useEffect(() => {
+    if (READ_ONLY) return;
     if (window.localStorage.getItem("wavelength:filters-collapsed") === "1") {
       setSidebarOpen(false);
     }
@@ -71,7 +77,8 @@ export default function Home() {
     setSidebarOpen((v) => {
       const next = !v;
       try {
-        window.localStorage.setItem("wavelength:filters-collapsed", next ? "0" : "1");
+        if (!READ_ONLY)
+          window.localStorage.setItem("wavelength:filters-collapsed", next ? "0" : "1");
       } catch {
         // Private-mode Safari throws on setItem; the toggle still works, it
         // just won't be remembered.
@@ -134,8 +141,8 @@ export default function Home() {
     let n = 0;
     if (filters.search) n++;
     if (!filters.allCategories) n++;
-    if (filters.freeOnly) n++;
-    if (filters.maxPrice != null) n++;
+    if (filters.priceBands.length !== d.priceBands.length ||
+        !filters.priceBands.every((b) => d.priceBands.includes(b))) n++;
     if (filters.includeRecurring !== d.includeRecurring) n++;
     if (filters.includeMonthly !== d.includeMonthly) n++;
     if (filters.hideUninterested !== d.hideUninterested) n++;
@@ -164,8 +171,7 @@ export default function Home() {
     // event times that fall in the early-AM UTC / late-PM Eastern window.
     if (filters.from) sp.set("from", filters.from);
     if (filters.to) sp.set("to", filters.to);
-    if (filters.freeOnly) sp.set("freeOnly", "1");
-    if (filters.maxPrice != null) sp.set("maxPrice", String(filters.maxPrice));
+    for (const b of filters.priceBands) sp.append("price", b);
     if (!filters.includeRecurring) sp.set("includeRecurring", "0");
     if (!filters.includeMonthly) sp.set("includeMonthly", "0");
     if (filters.hideUninterested) sp.set("hideUninterested", "1");

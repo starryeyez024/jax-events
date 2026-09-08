@@ -3,6 +3,7 @@ import path from "node:path";
 import fs from "node:fs";
 import { CATEGORIES, DEFAULT_WEIGHTS, type Category } from "./categories";
 import { metaForSource, type SourceStatus } from "./sources";
+import type { DistanceBucket } from "./distance";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const DB_PATH = path.join(DATA_DIR, "events.db");
@@ -203,7 +204,7 @@ export type EventWithExtras = EventRow & {
   attended: number | null;
   stars: number | null;
   score: number;
-  distance_bucket: "local" | "nearby" | "drive" | "far";
+  distance_bucket: DistanceBucket;
   distance_penalty: number;
   drive_miles: number | null;
   drive_minutes: number | null;

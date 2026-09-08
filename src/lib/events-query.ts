@@ -1,5 +1,6 @@
 import type Database from "better-sqlite3";
 import type { Category } from "./categories";
+import { priceBandFor, type PriceBand } from "./price-estimate";
 import { type EventRow, type EventWithExtras } from "./db";
 import {
   loadPreferences,
@@ -22,8 +23,7 @@ export type EventFilters = {
   to?: string;
   categories?: Category[];
   noCategories?: boolean; // explicit "show no events" — distinct from undefined (no filter)
-  maxPrice?: number;
-  freeOnly?: boolean;
+  priceBands?: PriceBand[];
   includeRecurring?: boolean;
   hideUninterested?: boolean;
   maxDistance?: DistanceBucket;
@@ -77,12 +77,9 @@ export function queryEvents(db: Database.Database, filters: EventFilters): Event
     // local so SQL's strict-less-than still includes events on the chosen day.
     params.to = localDateToIso(filters.to, "endExclusive");
   }
-  if (filters.freeOnly) {
-    where.push("(e.price_min = 0)");
-  } else if (typeof filters.maxPrice === "number") {
-    where.push("(e.price_min IS NULL OR e.price_min <= @maxPrice)");
-    params.maxPrice = filters.maxPrice;
-  }
+  // Price is deliberately NOT filtered in SQL: the band depends on
+  // estimatePrice(), which needs the event's categories and venue, so it is
+  // applied after rows are assembled (see the filter on the mapped rows).
   if (filters.includeRecurring === false) {
     where.push("e.is_recurring = 0");
   }
@@ -162,7 +159,7 @@ export function queryEvents(db: Database.Database, filters: EventFilters): Event
   const venues = loadVenueAffinity(db);
   const sources = loadSourceAffinity(db);
 
-  return rows.map((row) => {
+  const mapped: EventWithExtras[] = rows.map((row) => {
     const cats = (catsStmt.all(row.id) as Array<{ category: string }>).map(
       (r) => r.category as Category
     );
@@ -203,4 +200,13 @@ export function queryEvents(db: Database.Database, filters: EventFilters): Event
       directions_link: directionsLink(addressParts),
     };
   });
+
+  // Applied here rather than in SQL: the band comes from estimatePrice(),
+  // which needs the assembled categories/venue, and it has to match exactly
+  // what the card renders.
+  if (filters.priceBands) {
+    const allow = new Set(filters.priceBands);
+    return mapped.filter((e) => allow.has(priceBandFor(e)));
+  }
+  return mapped;
 }
