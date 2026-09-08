@@ -10,6 +10,7 @@ import { TipModal } from "@/components/TipModal";
 import { UndoToast, type ToastState } from "@/components/UndoToast";
 import { READ_ONLY } from "@/lib/config";
 import { filterEvents } from "@/lib/filter-events";
+import { decodeViewState, encodeViewState, type Defaults } from "@/lib/url-state";
 
 function todayIso(): string {
   const d = new Date();
@@ -24,24 +25,80 @@ function plusDaysIso(n: number): string {
 
 type SortMode = "match" | "chrono";
 
+const DEFAULT_FILTERS: FilterState = {
+  search: "",
+  selectedCategories: [],
+  allCategories: true,
+  freeOnly: false,
+  maxPrice: null,
+  includeRecurring: false,
+  includeMonthly: true,
+  hideUninterested: true,
+  maxDistance: "nearby", // default: Jax metro + ~1hr radius
+  from: todayIso(),
+  to: plusDaysIso(7),
+};
+
 export default function Home() {
-  const [view, setView] = useState<"list" | "calendar">("list");
   // Public read-only mode has no visible match score, so default to a plain
   // chronological list.
-  const [sort, setSort] = useState<SortMode>(READ_ONLY ? "chrono" : "match");
-  const [filters, setFilters] = useState<FilterState>({
-    search: "",
-    selectedCategories: [],
-    allCategories: true,
-    freeOnly: false,
-    maxPrice: null,
-    includeRecurring: false,
-    includeMonthly: true,
-    hideUninterested: true,
-    maxDistance: "nearby", // default: Jax metro + ~1hr radius
-    from: todayIso(),
-    to: plusDaysIso(7),
-  });
+  const defaults: Defaults = useMemo(
+    () => ({ filters: DEFAULT_FILTERS, sort: READ_ONLY ? "chrono" : "match" }),
+    []
+  );
+
+  const [view, setView] = useState<"list" | "calendar">("list");
+  const [sort, setSort] = useState<SortMode>(defaults.sort);
+  const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
+  const [calendarMode, setCalendarMode] = useState<"week" | "month">("week");
+  const [calendarDate, setCalendarDate] = useState<string | null>(null);
+  // Until the URL has been read, don't write to it — otherwise the first
+  // render would immediately overwrite an incoming shared link with defaults.
+  const [hydrated, setHydrated] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  // Read the incoming link once, on mount. Using window.location rather than
+  // useSearchParams keeps this component out of Next's Suspense requirement
+  // for static rendering, which the read-only export depends on.
+  useEffect(() => {
+    const { state } = decodeViewState(window.location.search, defaults);
+    setFilters(state.filters);
+    setView(state.view);
+    setSort(state.sort);
+    setCalendarMode(state.calendarMode);
+    setCalendarDate(state.calendarDate);
+    setHydrated(true);
+  }, [defaults]);
+
+  // Mirror state back into the URL. replaceState, not push — every chip click
+  // would otherwise add a history entry and make Back unusable.
+  useEffect(() => {
+    if (!hydrated) return;
+    const qs = encodeViewState(
+      { filters, view, sort, calendarMode, calendarDate },
+      defaults
+    );
+    const url = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+    window.history.replaceState(null, "", url);
+  }, [hydrated, filters, view, sort, calendarMode, calendarDate, defaults]);
+
+  async function copyShareLink() {
+    const qs = encodeViewState(
+      { filters, view, sort, calendarMode, calendarDate },
+      defaults
+    );
+    const url = `${window.location.origin}${window.location.pathname}${qs ? `?${qs}` : ""}`;
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      // Clipboard API needs a secure context and permission; neither is
+      // guaranteed. Fall back to a prompt so the link is still copyable.
+      window.prompt("Copy this link:", url);
+      return;
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
   const [events, setEvents] = useState<EventWithExtras[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -175,6 +232,17 @@ export default function Home() {
               ＋ Add tip
             </button>
           )}
+          <button
+            onClick={copyShareLink}
+            className={`px-4 py-2 text-[12.8px] font-medium rounded-full border transition ${
+              copied
+                ? "border-ocean-500 bg-ocean-50 text-ocean-700"
+                : "border-slate-200 bg-white/70 backdrop-blur hover:bg-white hover:border-slate-300"
+            }`}
+            title="Copy a link to exactly this view — same dates, filters and layout"
+          >
+            {copied ? "✓ Link copied" : "🔗 Share this view"}
+          </button>
           <a
             href="/api/calendar.ics?status=registered"
             className="px-4 py-2 text-[12.8px] font-medium rounded-full border border-slate-200 bg-white/70 backdrop-blur hover:bg-white hover:border-slate-300 transition"
@@ -240,7 +308,13 @@ export default function Home() {
               </div>
             </>
           ) : (
-            <CalendarView events={events} />
+            <CalendarView
+              events={events}
+              mode={calendarMode}
+              onModeChange={setCalendarMode}
+              date={calendarDate}
+              onDateChange={setCalendarDate}
+            />
           )}
         </main>
       </div>
