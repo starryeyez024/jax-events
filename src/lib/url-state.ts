@@ -35,7 +35,7 @@ export function defaultFilters(from: string, to: string): FilterState {
     selectedCategories: [],
     allCategories: true,
     priceBands: ["free", "paid", "unknown"],
-    includeRecurring: false,
+    includeRecurring: true,
     includeMonthly: true,
     hideUninterested: true,
     maxDistance: "nearby",

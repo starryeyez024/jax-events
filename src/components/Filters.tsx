@@ -230,46 +230,52 @@ export function Filters({
           )}
         </div>
 
-        <div className="text-xs">
-          <div className="flex justify-between items-center mb-1.5">
-            <span className="text-slate-500 font-medium uppercase tracking-wider text-[10px]">Driving radius</span>
-            <span className="font-medium text-slate-700" title={BUCKET_LABELS[value.maxDistance]}>
-              {BUCKET_SHORT[value.maxDistance]}
-            </span>
+        {/* Distances are measured from one fixed origin, which means nothing
+            to a visitor who could be anywhere in the city — the same reason
+            the per-card drive time is local-only. And 720 of 721 upcoming
+            events are Jax metro, so the control had almost nothing to do. */}
+        {!READ_ONLY && (
+          <div className="text-xs">
+            <div className="flex justify-between items-center mb-1.5">
+              <span className="text-slate-500 font-medium uppercase tracking-wider text-[10px]">Driving radius</span>
+              <span className="font-medium text-slate-700" title={BUCKET_LABELS[value.maxDistance]}>
+                {BUCKET_SHORT[value.maxDistance]}
+              </span>
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={BUCKET_ORDER.length - 1}
+              step={1}
+              value={BUCKET_ORDER.indexOf(value.maxDistance)}
+              onChange={(e) =>
+                onChange({ ...value, maxDistance: BUCKET_ORDER[Number(e.target.value)] })
+              }
+              className="w-full accent-slate-900"
+              list="distance-buckets"
+              aria-label="Maximum driving radius"
+            />
+            <datalist id="distance-buckets">
+              {BUCKET_ORDER.map((_, i) => (
+                <option key={i} value={i} />
+              ))}
+            </datalist>
+            <div className="flex justify-between mt-1 text-[10px] text-slate-400">
+              {BUCKET_ORDER.map((b) => (
+                <button
+                  key={b}
+                  onClick={() => onChange({ ...value, maxDistance: b })}
+                  className={`px-1 hover:text-slate-700 transition ${
+                    value.maxDistance === b ? "text-slate-900 font-medium" : ""
+                  }`}
+                  title={BUCKET_LABELS[b]}
+                >
+                  {BUCKET_SHORT[b]}
+                </button>
+              ))}
+            </div>
           </div>
-          <input
-            type="range"
-            min={0}
-            max={BUCKET_ORDER.length - 1}
-            step={1}
-            value={BUCKET_ORDER.indexOf(value.maxDistance)}
-            onChange={(e) =>
-              onChange({ ...value, maxDistance: BUCKET_ORDER[Number(e.target.value)] })
-            }
-            className="w-full accent-slate-900"
-            list="distance-buckets"
-            aria-label="Maximum driving radius"
-          />
-          <datalist id="distance-buckets">
-            {BUCKET_ORDER.map((_, i) => (
-              <option key={i} value={i} />
-            ))}
-          </datalist>
-          <div className="flex justify-between mt-1 text-[10px] text-slate-400">
-            {BUCKET_ORDER.map((b) => (
-              <button
-                key={b}
-                onClick={() => onChange({ ...value, maxDistance: b })}
-                className={`px-1 hover:text-slate-700 transition ${
-                  value.maxDistance === b ? "text-slate-900 font-medium" : ""
-                }`}
-                title={BUCKET_LABELS[b]}
-              >
-                {BUCKET_SHORT[b]}
-              </button>
-            ))}
-          </div>
-        </div>
+        )}
 
         <div>
           <div className="flex items-baseline justify-between mb-2">

@@ -17,13 +17,17 @@ import { queryEvents } from "../src/lib/events-query";
 // window client-side, so it needs to be at least as wide as the UI allows.
 const WINDOW_DAYS = 180;
 
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-function plusDaysIso(n: number): string {
+// Local calendar date, matching how the browser computes its default date
+// range. toISOString() would give the UTC date, which after ~8pm Eastern has
+// already rolled to tomorrow — the snapshot then starts a day late and
+// silently drops the rest of today's events. The weekly CI run happens at
+// 11:00 UTC where the two agree, so this only ever bit manual runs.
+function localIso(offsetDays = 0): string {
   const d = new Date();
-  d.setDate(d.getDate() + n);
-  return d.toISOString().slice(0, 10);
+  d.setDate(d.getDate() + offsetDays);
+  d.setHours(0, 0, 0, 0);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
 function main() {
@@ -32,8 +36,10 @@ function main() {
   // Widest non-personalized read: every upcoming event, all categories, all
   // distances, recurring + monthly included. The client narrows from here.
   const events = queryEvents(db, {
-    from: todayIso(),
-    to: plusDaysIso(WINDOW_DAYS),
+    // Start a day early: the client filters the window precisely anyway, so
+    // the extra day costs nothing and removes any timezone-edge truncation.
+    from: localIso(-1),
+    to: localIso(WINDOW_DAYS),
     includeRecurring: true,
     includeMonthly: true,
     hideUninterested: false,

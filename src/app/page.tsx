@@ -34,10 +34,13 @@ const DEFAULT_FILTERS: FilterState = {
   // silently hiding the 248 events whose price nobody publishes — that would
   // be narrowing the list on missing data rather than on a real signal.
   priceBands: ["free", "unknown"],
-  includeRecurring: false,
+  includeRecurring: true,
   includeMonthly: true,
   hideUninterested: true,
-  maxDistance: "nearby", // default: Jax metro + ~1hr radius
+  // The public build has no radius control (see Filters.tsx), so it must not
+  // default to a narrowing value — a hidden filter quietly dropping events is
+  // exactly the failure mode the /sources page exists to prevent.
+  maxDistance: READ_ONLY ? "far" : "nearby",
   from: todayIso(),
   to: plusDaysIso(7),
 };
