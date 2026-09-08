@@ -7,7 +7,7 @@
 // Usage:   npx tsx scripts/scrape.ts
 // Cron:    triggered weekly by scripts/refresh.sh + the launchd plist.
 
-import { getDb, upsertEvent, type EventInput } from "../src/lib/db";
+import { getDb, upsertEvent, recordSourceRun, type EventInput } from "../src/lib/db";
 import { fetchTicketmaster } from "../src/scrapers/ticketmaster";
 import { fetchCummer } from "../src/scrapers/cummer";
 import { fetchFloridaTheatre } from "../src/scrapers/florida-theatre";
@@ -18,6 +18,7 @@ import { fetchKickers } from "../src/scrapers/kickers";
 import { fetchAtlanticBeach } from "../src/scrapers/atlantic-beach";
 import { fetchEventbrite } from "../src/scrapers/eventbrite";
 import { fetchBoldCitySwing } from "../src/scrapers/bold-city-swing";
+import { fetchKavaAndCompany } from "../src/scrapers/kava-and-company";
 
 type SourceFn = () => Promise<EventInput[]>;
 
@@ -32,6 +33,7 @@ const SOURCES: Record<string, SourceFn> = {
   "atlantic-beach": fetchAtlanticBeach,
   eventbrite: fetchEventbrite,
   "bold-city-swing": fetchBoldCitySwing,
+  "kava-and-company": fetchKavaAndCompany,
 };
 
 async function main() {
@@ -48,13 +50,26 @@ async function main() {
           for (const e of events) upsertEvent(db, e);
         });
         tx();
-        results.push({ source: name, fetched: events.length, ms: Date.now() - t0 });
-      } catch (err) {
-        results.push({
+        const ms = Date.now() - t0;
+        results.push({ source: name, fetched: events.length, ms });
+        recordSourceRun(db, {
           source: name,
+          status: "ok",
+          fetched: events.length,
+          duration_ms: ms,
+        });
+      } catch (err) {
+        const ms = Date.now() - t0;
+        const message = (err as Error).message;
+        results.push({ source: name, fetched: 0, error: message, ms });
+        // Record failures too — a silent scraper is the exact thing the
+        // /sources page exists to make visible.
+        recordSourceRun(db, {
+          source: name,
+          status: "error",
           fetched: 0,
-          error: (err as Error).message,
-          ms: Date.now() - t0,
+          error: message,
+          duration_ms: ms,
         });
       }
     })
