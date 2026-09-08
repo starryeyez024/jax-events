@@ -128,7 +128,11 @@ export function Filters({
           one x-position that is identical whether the column is 300px or a
           52px rail. So it stays put across the toggle instead of vanishing
           and reappearing somewhere else. */}
-      <div className="flex items-center gap-2">
+      <div
+        className={`flex items-center gap-2 ${
+          collapsed ? "md:flex-col md:gap-3" : ""
+        }`}
+      >
         <button
           onClick={onToggle}
           aria-expanded={!collapsed}
@@ -151,8 +155,25 @@ export function Filters({
             </span>
           )}
         </button>
-        {!collapsed && (
-          <h2 className="font-display text-lg font-semibold text-slate-900 tracking-tight">
+        {/* The label never goes away — only its orientation changes.
+            Horizontal whenever there is width for it: always when open, and
+            on mobile even when collapsed, where the panel is a full-width
+            accordion rather than a rail. */}
+        <h2
+          className={`font-display text-lg font-semibold text-slate-900 tracking-tight ${
+            collapsed ? "md:hidden" : ""
+          }`}
+        >
+          Filters
+        </h2>
+
+        {/* Desktop rail only: turned on its side to use the vertical space a
+            56px column has plenty of, so the rail still says what it is. */}
+        {collapsed && (
+          <h2
+            aria-hidden
+            className="hidden md:block [writing-mode:vertical-rl] font-display text-sm font-semibold uppercase tracking-[0.18em] text-slate-400 select-none"
+          >
             Filters
           </h2>
         )}
