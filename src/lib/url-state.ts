@@ -68,11 +68,23 @@ export function encodeViewState(s: ViewState, d: Defaults): string {
   if (f.hideUninterested !== defaults.hideUninterested) p.set("hideDown", f.hideUninterested ? "1" : "0");
   if (f.maxDistance !== defaults.maxDistance) p.set("dist", f.maxDistance);
 
-  // Three-state category model: "all" is the default and written as nothing;
-  // an explicit empty selection has to be distinguishable from it, so it gets
-  // its own marker rather than an empty categories= that would decode as absent.
-  if (!f.allCategories) {
-    p.set("categories", f.selectedCategories.length ? f.selectedCategories.join(",") : "none");
+  // Three-state category model. The default is no longer "all" — it is
+  // everything except Govt Meetings — so the comparison is against the
+  // default rather than against allCategories, otherwise every page load
+  // would write the whole category list into the URL. "all" and "none" need
+  // explicit markers: both are states an empty categories= cannot express.
+  const catsAtDefault =
+    f.allCategories === defaults.allCategories &&
+    sameList(f.selectedCategories, defaults.selectedCategories);
+  if (!catsAtDefault) {
+    p.set(
+      "categories",
+      f.allCategories
+        ? "all"
+        : f.selectedCategories.length
+          ? [...f.selectedCategories].sort().join(",")
+          : "none"
+    );
   }
 
   if (s.view !== "list") p.set("view", s.view);
@@ -99,7 +111,10 @@ export function decodeViewState(
   const cats = p.get("categories");
   let allCategories = defaults.allCategories;
   let selectedCategories: Category[] = defaults.selectedCategories;
-  if (cats === "none") {
+  if (cats === "all") {
+    allCategories = true;
+    selectedCategories = [];
+  } else if (cats === "none") {
     allCategories = false;
     selectedCategories = [];
   } else if (cats) {
@@ -140,6 +155,10 @@ function bool(v: string | null, fallback: boolean): boolean {
   if (v === "1") return true;
   if (v === "0") return false;
   return fallback;
+}
+
+function sameList(a: readonly string[], b: readonly string[]): boolean {
+  return a.length === b.length && [...a].sort().join() === [...b].sort().join();
 }
 
 function sameBands(a: PriceBand[], b: PriceBand[]): boolean {

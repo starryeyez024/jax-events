@@ -6,6 +6,7 @@ import type { EventWithExtras } from "@/lib/db";
 import { EventCard } from "@/components/EventCard";
 import { CalendarView } from "@/components/CalendarView";
 import { Filters, type FilterState } from "@/components/Filters";
+import { CATEGORIES } from "@/lib/categories";
 import { TipModal } from "@/components/TipModal";
 import { UndoToast, type ToastState } from "@/components/UndoToast";
 import { ShareMenu } from "@/components/ShareMenu";
@@ -28,8 +29,12 @@ type SortMode = "match" | "chrono";
 
 const DEFAULT_FILTERS: FilterState = {
   search: "",
-  selectedCategories: [],
-  allCategories: true,
+  // Everything except Govt Meetings. Expressed through the existing
+  // three-state model rather than a special case: "Select all" is genuinely
+  // off, because one category genuinely is not selected. Ticking it selects
+  // everything, Govt Meetings included, exactly like any other chip.
+  selectedCategories: CATEGORIES.filter((c) => c !== "govt-meeting"),
+  allCategories: false,
   // Free + unknown by default: "default to free" per the ask, but without
   // silently hiding the 248 events whose price nobody publishes — that would
   // be narrowing the list on missing data rather than on a real signal.
@@ -143,7 +148,11 @@ export default function Home() {
     const d = DEFAULT_FILTERS;
     let n = 0;
     if (filters.search) n++;
-    if (!filters.allCategories) n++;
+    if (
+      filters.allCategories !== d.allCategories ||
+      filters.selectedCategories.length !== d.selectedCategories.length
+    )
+      n++;
     if (filters.priceBands.length !== d.priceBands.length ||
         !filters.priceBands.every((b) => d.priceBands.includes(b))) n++;
     if (filters.includeRecurring !== d.includeRecurring) n++;
