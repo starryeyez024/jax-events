@@ -216,17 +216,18 @@ export default function Home() {
             <span aria-hidden className="mr-2">🏄</span>
             Wavelength
           </h1>
-          <p className="text-sm text-slate-500 mt-2 font-medium tracking-wide">
+          <p className="text-base text-slate-700 mt-2 font-medium">
             Events on your wavelength · Jacksonville Beach
           </p>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap justify-end">
           <Link
             href="/sources"
-            className="inline-block text-[12.8px] text-slate-500 hover:text-slate-900 underline decoration-slate-300 underline-offset-4 mt-2 transition"
+            className="px-4 py-2 text-[12.8px] font-medium rounded-full border border-slate-200 bg-white/70 backdrop-blur hover:bg-white hover:border-slate-300 transition"
+            title="Where these events come from and how current each source is"
           >
             Sources &amp; freshness
           </Link>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
           {!READ_ONLY && (
             <button
               onClick={() => setTipOpen(true)}
@@ -268,8 +269,7 @@ export default function Home() {
             <Filters
               value={filters}
               onChange={setFilters}
-              count={events.length}
-              loading={loading}
+              onCollapse={() => setSidebarOpen(false)}
             />
           </aside>
         )}
@@ -278,14 +278,32 @@ export default function Home() {
           {/* Sits with the content it controls rather than up in the header,
               where it read as site chrome. */}
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <button
-              onClick={() => setSidebarOpen((v) => !v)}
-              className="px-3 py-2 text-[12.8px] font-medium rounded-full border border-slate-200 bg-white/70 backdrop-blur hover:bg-white hover:border-slate-300 transition"
-              aria-expanded={sidebarOpen}
-              title={sidebarOpen ? "Hide the filter panel" : "Show the filter panel"}
-            >
-              {sidebarOpen ? "◀ Hide filters" : `☰ Filters${activeFilterCount ? ` (${activeFilterCount})` : ""}`}
-            </button>
+            <div className="flex items-center gap-3">
+              {/* Only rendered while the panel is hidden — when it's open, the
+                  collapse control lives inside the panel itself. */}
+              {!sidebarOpen && (
+                <button
+                  onClick={() => setSidebarOpen(true)}
+                  className="px-3 py-2 text-[12.8px] font-medium rounded-full border border-slate-200 bg-white/70 backdrop-blur hover:bg-white hover:border-slate-300 transition"
+                  aria-expanded={false}
+                  title="Show the filter panel"
+                >
+                  ☰ Filters{activeFilterCount ? ` (${activeFilterCount})` : ""}
+                </button>
+              )}
+              <div className="font-display text-3xl font-medium text-slate-900 tracking-tight leading-none">
+                {loading ? (
+                  <span className="text-slate-400">Loading…</span>
+                ) : (
+                  <>
+                    {events.length}{" "}
+                    <span className="text-slate-400 text-xl font-normal">
+                      event{events.length === 1 ? "" : "s"}
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
 
             <SegmentedToggle
               options={[

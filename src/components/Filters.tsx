@@ -41,13 +41,12 @@ export type FilterState = {
 type Props = {
   value: FilterState;
   onChange: (next: FilterState) => void;
-  // Surfaces the current result count at the top of the panel. Lives here
-  // (rather than as a sibling) so it sits inside the white card frame.
-  count: number;
-  loading: boolean;
+  /** Collapses the panel. Rendered here so the control that hides this
+   *  column lives in the column it hides, not floating beside the results. */
+  onCollapse: () => void;
 };
 
-export function Filters({ value, onChange, count, loading }: Props) {
+export function Filters({ value, onChange, onCollapse }: Props) {
   const allOn = value.allCategories;
 
   function toggleCat(c: Category) {
@@ -112,17 +111,17 @@ export function Filters({ value, onChange, count, loading }: Props) {
 
   return (
     <div className="bg-white rounded-3xl border border-slate-200 p-5 space-y-5">
-      <div className="font-display text-3xl font-medium text-slate-900 tracking-tight leading-none">
-        {loading ? (
-          <span className="text-slate-400">Loading…</span>
-        ) : (
-          <>
-            {count}{" "}
-            <span className="text-slate-400 text-xl font-normal">
-              event{count === 1 ? "" : "s"}
-            </span>
-          </>
-        )}
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="font-display text-lg font-semibold text-slate-900 tracking-tight">
+          Filters
+        </h2>
+        <button
+          onClick={onCollapse}
+          className="px-3 py-1.5 text-[12.8px] font-medium rounded-full border border-slate-200 bg-sand-50 hover:bg-white hover:border-slate-300 transition"
+          title="Hide the filter panel"
+        >
+          ◀ Hide
+        </button>
       </div>
 
       <input
