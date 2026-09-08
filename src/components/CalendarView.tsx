@@ -6,12 +6,30 @@ import type { EventWithExtras } from "@/lib/db";
 
 type Props = {
   events: EventWithExtras[];
+  // Mode and cursor are lifted so they can round-trip through the URL — a
+  // shared link has to reproduce "month view, parked on October". Optional so
+  // the component still works standalone with its own internal state.
+  mode?: Mode;
+  onModeChange?: (mode: Mode) => void;
+  date?: string | null;
+  onDateChange?: (date: string) => void;
 };
 
 type Mode = "month" | "week";
 
-export function CalendarView({ events }: Props) {
-  const [mode, setMode] = useState<Mode>("week");
+export function CalendarView({
+  events,
+  mode: modeProp,
+  onModeChange,
+  date: dateProp,
+  onDateChange,
+}: Props) {
+  const [modeInternal, setModeInternal] = useState<Mode>("week");
+  const mode = modeProp ?? modeInternal;
+  const setMode = (m: Mode) => {
+    setModeInternal(m);
+    onModeChange?.(m);
+  };
   // Two independent toggles. Both off = "All". Both on = events matching
   // either filter (union). One on = just that filter.
   const [showInterested, setShowInterested] = useState(false);
@@ -26,11 +44,15 @@ export function CalendarView({ events }: Props) {
         (showRegistered && e.registered === 1)
     );
   }, [events, showInterested, showRegistered, showAll]);
-  const [cursor, setCursor] = useState<Date>(() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d;
-  });
+  const [cursorInternal, setCursorInternal] = useState<Date>(() => parseDay(dateProp));
+  // A controlled date wins, so navigating via a shared link lands on the
+  // right week. Parsed as local midnight — `new Date("2026-09-11")` would be
+  // UTC and can render as the previous day west of Greenwich.
+  const cursor = dateProp ? parseDay(dateProp) : cursorInternal;
+  const setCursor = (d: Date) => {
+    setCursorInternal(d);
+    onDateChange?.(dayKey(d));
+  };
 
   // Split events: dated events go on the grid, ongoing exhibitions surface in
   // a separate row below so a 6-month-long exhibition doesn't clutter every day.
@@ -334,6 +356,10 @@ function MonthGrid({
   byDate: Map<string, EventWithExtras[]>;
   today: Date;
 }) {
+  // Which day cell is showing its full event list. Only one at a time —
+  // expanding several at once makes the grid jump around unpredictably.
+  const [expanded, setExpanded] = useState<string | null>(null);
+
   return (
     <>
       <div className="grid grid-cols-7 gap-1 text-center text-xs text-slate-500 mb-1">
@@ -347,16 +373,20 @@ function MonthGrid({
             return <div key={cell.key} className="h-28 rounded bg-slate-50/50" />;
           const dayEvents = byDate.get(dayKey(cell.date)) ?? [];
           const isToday = cell.date.toDateString() === today.toDateString();
+          const key = dayKey(cell.date);
+          const isExpanded = expanded === key;
+          // Collapsed cells are a fixed height so the grid stays even; an
+          // expanded one grows to fit, taking its whole row with it.
           return (
             <div
               key={cell.key}
-              className={`h-28 rounded border p-1 text-xs overflow-hidden flex flex-col ${
-                isToday ? "border-ocean-500 bg-ocean-50" : "border-slate-200"
-              }`}
+              className={`rounded border p-1 text-xs flex flex-col ${
+                isExpanded ? "min-h-28" : "h-28 overflow-hidden"
+              } ${isToday ? "border-ocean-500 bg-ocean-50" : "border-slate-200"}`}
             >
               <div className="font-medium">{cell.date.getDate()}</div>
-              <div className="space-y-0.5 mt-0.5 overflow-hidden">
-                {dayEvents.slice(0, 3).map((e) => {
+              <div className={`space-y-0.5 mt-0.5 ${isExpanded ? "" : "overflow-hidden"}`}>
+                {(isExpanded ? dayEvents : dayEvents.slice(0, 3)).map((e) => {
                   const t = typeFor(e);
                   return e.url ? (
                     <a
@@ -383,7 +413,14 @@ function MonthGrid({
                   );
                 })}
                 {dayEvents.length > 3 && (
-                  <div className="text-slate-500 px-1">+{dayEvents.length - 3} more</div>
+                  <button
+                    type="button"
+                    onClick={() => setExpanded(isExpanded ? null : key)}
+                    className="w-full text-left px-1 rounded text-slate-500 hover:text-slate-900 hover:bg-slate-100 hover:underline transition"
+                    aria-expanded={isExpanded}
+                  >
+                    {isExpanded ? "− show less" : `+${dayEvents.length - 3} more`}
+                  </button>
                 )}
               </div>
             </div>
@@ -417,6 +454,17 @@ function OngoingChip({ event }: { event: EventWithExtras }) {
       {inner}
     </a>
   );
+}
+
+/** YYYY-MM-DD -> local midnight. Falls back to today. */
+function parseDay(v?: string | null): Date {
+  if (v && /^\d{4}-\d{2}-\d{2}$/.test(v)) {
+    const [y, m, d] = v.split("-").map(Number);
+    return new Date(y, m - 1, d);
+  }
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
 }
 
 function dayKey(d: Date): string {
