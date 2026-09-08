@@ -95,6 +95,13 @@ export const SOURCE_META: Record<string, SourceMeta> = {
       "Small free and civic events — JaxParks fitness classes, run clubs, neighborhood markets, community meetings — typed in by hand from a weekly local newsletter. No automated feed exists for most of these.",
     kind: "manual",
   },
+  "community-yoga": {
+    label: "Free community yoga (hand-entered)",
+    url: "https://jaxparks.coj.net/",
+    covers:
+      "The standing weekly free-yoga schedule around town — JaxParks, Yoga 4 Change and Yoga Den. Split across three organizers with no shared feed, so it's maintained by hand as a recurring schedule.",
+    kind: "manual",
+  },
   seed: {
     label: "Starter seed list",
     url: null,
@@ -143,11 +150,14 @@ export type SourceStatus = {
   /** ISO date of the furthest-out event we have. Null if none upcoming. */
   covers_through: string | null;
   /**
-   * When data from this source last landed in the app. Distinct from
-   * last_run_at: a scraper can run and fail, in which case this stays put.
-   * This is the honest "how fresh is this" figure for the public page.
+   * The public "how fresh is this" figure: when this source was last
+   * successfully CHECKED. A successful run that finds nothing new still
+   * counts — we confirmed nothing changed. Falls back to event-row
+   * timestamps for hand-entered sources, which are never run.
    */
   last_updated: string | null;
+  /** Last successful run. Survives later failures. Null = never succeeded. */
+  last_ok_at: string | null;
   /** When the scraper last ran, successfully or not. Null if never recorded. */
   last_run_at: string | null;
   /** Outcome of that last run. */

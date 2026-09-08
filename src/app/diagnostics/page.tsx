@@ -91,7 +91,10 @@ export default function DiagnosticsPage() {
                 </p>
                 <p className="text-[12.8px] text-slate-500 mt-1">
                   {s.upcoming} stale event{s.upcoming === 1 ? "" : "s"} still in the app
-                  {s.last_updated && ` · last real data ${relative(s.last_updated)}`}
+                  {" · "}
+                  {s.last_ok_at
+                    ? `last succeeded ${relative(s.last_ok_at)}`
+                    : "never succeeded since tracking began"}
                 </p>
               </div>
             ))}
@@ -112,7 +115,7 @@ export default function DiagnosticsPage() {
                   <Th>kind</Th>
                   <Th className="text-right">upcoming</Th>
                   <Th>last run</Th>
-                  <Th>last data</Th>
+                  <Th>last success</Th>
                   <Th>published through</Th>
                 </tr>
               </thead>
@@ -127,7 +130,9 @@ export default function DiagnosticsPage() {
                     <Td className="text-slate-500">
                       {s.kind === "manual" ? "—" : relative(s.last_run_at)}
                     </Td>
-                    <Td className="text-slate-500">{relative(s.last_updated)}</Td>
+                    <Td className="text-slate-500">
+                      {s.kind === "manual" ? "—" : relative(s.last_ok_at)}
+                    </Td>
                     <Td className="text-slate-500">{formatDate(s.covers_through)}</Td>
                   </tr>
                 ))}

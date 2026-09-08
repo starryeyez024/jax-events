@@ -130,9 +130,33 @@ function migrate(db: Database.Database) {
       fetched     INTEGER NOT NULL DEFAULT 0,
       error       TEXT,                      -- null when status='ok'
       duration_ms INTEGER,
-      ran_at      TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      ran_at      TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      -- Last run that SUCCEEDED. Deliberately not overwritten by a later
+      -- failure, so "when did this source last actually work?" survives an
+      -- outage. ran_at answers "when did we last try"; these differ exactly
+      -- when something is broken, which is when the distinction matters.
+      last_ok_at  TEXT
     );
   `);
+
+  addColumnIfMissing(db, "source_runs", "last_ok_at", "TEXT");
+}
+
+/**
+ * SQLite has no ADD COLUMN IF NOT EXISTS, so check pragma first. Lets the
+ * migrate() block above stay declarative for fresh databases while existing
+ * ones pick up new columns in place.
+ */
+function addColumnIfMissing(
+  db: Database.Database,
+  table: string,
+  column: string,
+  type: string
+) {
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>;
+  if (!cols.some((c) => c.name === column)) {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);
+  }
 }
 
 function seedPreferencesIfEmpty(db: Database.Database) {
@@ -289,14 +313,19 @@ export type SourceRunInput = {
 
 export function recordSourceRun(db: Database.Database, r: SourceRunInput): void {
   db.prepare(
-    `INSERT INTO source_runs (source, status, fetched, error, duration_ms, ran_at)
-     VALUES (@source, @status, @fetched, @error, @duration_ms, CURRENT_TIMESTAMP)
+    `INSERT INTO source_runs (source, status, fetched, error, duration_ms, ran_at, last_ok_at)
+     VALUES (@source, @status, @fetched, @error, @duration_ms, CURRENT_TIMESTAMP,
+             CASE WHEN @status = 'ok' THEN CURRENT_TIMESTAMP END)
      ON CONFLICT(source) DO UPDATE SET
        status=excluded.status,
        fetched=excluded.fetched,
        error=excluded.error,
        duration_ms=excluded.duration_ms,
-       ran_at=CURRENT_TIMESTAMP`
+       ran_at=CURRENT_TIMESTAMP,
+       -- Only advance on success; a failure leaves the previous value intact.
+       last_ok_at=CASE WHEN excluded.status = 'ok'
+                       THEN CURRENT_TIMESTAMP
+                       ELSE source_runs.last_ok_at END`
   ).run({
     source: r.source,
     status: r.status,
@@ -322,11 +351,7 @@ export function getSourceStatuses(db: Database.Database): SourceStatus[] {
          SELECT source,
                 count(*)          AS n,
                 max(starts_at)    AS through,
-                -- When we last actually received data from this source. Note
-                -- this is deliberately NOT the last run attempt: a scraper
-                -- can run and fail, and "last updated" should reflect the
-                -- last time real data arrived.
-                max(last_seen_at) AS updated
+                max(last_seen_at) AS last_row_touched
          FROM events
          WHERE starts_at >= datetime('now')
          GROUP BY source
@@ -339,7 +364,14 @@ export function getSourceStatuses(db: Database.Database): SourceStatus[] {
        SELECT s.source,
               coalesce(u.n, 0)  AS upcoming,
               u.through         AS covers_through,
-              u.updated         AS last_updated,
+              -- "Last updated" = the last time we successfully CHECKED this
+              -- source, not the last time one of its rows happened to change.
+              -- A successful run that returns nothing new is still an update
+              -- (we confirmed nothing changed); using row timestamps would
+              -- report that as weeks-stale. Falls back to row timestamps for
+              -- hand-entered sources, which are never "run" at all.
+              coalesce(r.last_ok_at, u.last_row_touched) AS last_updated,
+              r.last_ok_at      AS last_ok_at,
               r.ran_at          AS last_run_at,
               r.status          AS last_status,
               r.error           AS last_error
@@ -353,6 +385,7 @@ export function getSourceStatuses(db: Database.Database): SourceStatus[] {
     upcoming: number;
     covers_through: string | null;
     last_updated: string | null;
+    last_ok_at: string | null;
     last_run_at: string | null;
     last_status: "ok" | "error" | null;
     last_error: string | null;
