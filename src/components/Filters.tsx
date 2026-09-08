@@ -120,8 +120,8 @@ export function Filters({
 
   return (
     <div
-      className={`bg-white rounded-3xl border border-slate-200 space-y-5 ${
-        collapsed ? "p-2" : "p-5"
+      className={`bg-white rounded-3xl border border-slate-200 space-y-5 p-5 ${
+        collapsed ? "md:p-2" : ""
       }`}
     >
       {/* The trigger is anchored to the LEFT edge of the card, which is the
@@ -172,7 +172,7 @@ export function Filters({
         {collapsed && (
           <h2
             aria-hidden
-            className="hidden md:block [writing-mode:vertical-rl] font-display text-sm font-semibold uppercase tracking-[0.18em] text-slate-400 select-none"
+            className="hidden md:block [writing-mode:vertical-rl] rotate-180 font-display text-sm font-semibold uppercase tracking-[0.18em] text-slate-400 select-none"
           >
             Filters
           </h2>

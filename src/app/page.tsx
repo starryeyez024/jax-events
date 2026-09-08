@@ -285,7 +285,11 @@ export default function Home() {
           mounted and animates its width, so collapsing slides the content over
           instead of snapping it 300px. On mobile the column is full-width and
           the panel simply behaves as an accordion. */}
-      <div className="flex flex-col md:flex-row gap-6 md:gap-10">
+      <div
+        className={`flex flex-col md:flex-row gap-6 transition-[column-gap] duration-300 ease-out motion-reduce:transition-none ${
+          sidebarOpen ? "md:gap-10" : "md:gap-4"
+        }`}
+      >
         <aside
           className={`shrink-0 overflow-hidden transition-[width] duration-300 ease-out motion-reduce:transition-none w-full ${
             sidebarOpen ? "md:w-[300px]" : "md:w-[56px]"
