@@ -9,6 +9,7 @@ import {
   type Category,
 } from "@/lib/categories";
 import { BUCKET_LABELS, BUCKET_ORDER, type DistanceBucket } from "@/lib/distance";
+import { READ_ONLY } from "@/lib/config";
 
 // Short, scannable labels for the slider tick row. The full description still
 // lives in BUCKET_LABELS and is wired up as a tooltip on each tick.
@@ -276,11 +277,17 @@ export function Filters({
             onChange={(b) => onChange({ ...value, freeOnly: b })}
             label="Free only"
           />
-          <FilterCheckbox
-            checked={value.hideUninterested}
-            onChange={(b) => onChange({ ...value, hideUninterested: b })}
-            label="Hide 👎"
-          />
+          {/* 👎 is a personalization signal, and read-only builds have no way
+              to set one — filterEvents treats hideUninterested as a no-op
+              there. Showing the checkbox promised a filter that could never
+              do anything. */}
+          {!READ_ONLY && (
+            <FilterCheckbox
+              checked={value.hideUninterested}
+              onChange={(b) => onChange({ ...value, hideUninterested: b })}
+              label="Hide 👎"
+            />
+          )}
           <FilterCheckbox
             checked={value.includeRecurring}
             onChange={(b) => onChange({ ...value, includeRecurring: b })}

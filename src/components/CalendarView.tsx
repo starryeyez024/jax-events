@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { typeFor } from "@/lib/event-type";
+import { READ_ONLY } from "@/lib/config";
 import type { EventWithExtras } from "@/lib/db";
 
 type Props = {
@@ -166,7 +167,16 @@ export function CalendarView({
         </div>
       </div>
 
-      <div className="flex items-center gap-1 mb-3 flex-wrap text-sm">
+      {/* Same reasoning as the "Hide 👎" checkbox: interest and registration
+          are personalization, absent from the public snapshot, so these
+          counts are permanently 0 and the toggles filter on data that isn't
+          there. With them gone, "All" is the only option and the row has
+          nothing left to say. */}
+      <div
+        className={`items-center gap-1 mb-3 flex-wrap text-sm ${
+          READ_ONLY ? "hidden" : "flex"
+        }`}
+      >
         <span className="text-xs text-slate-500 mr-1">Show:</span>
         <button
           onClick={() => {
