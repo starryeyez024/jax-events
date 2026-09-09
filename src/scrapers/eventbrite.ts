@@ -72,6 +72,18 @@ export async function fetchEventbrite(): Promise<EventInput[]> {
     }
   }
 
+  // Fill in real times. Only events the listing dated without a time need a
+  // detail fetch, so this costs one request per affected event and nothing
+  // for any event Eventbrite already timed properly.
+  for (const e of out) {
+    const guessed = (e.raw_json as { timeIsGuessed?: boolean } | undefined)?.timeIsGuessed;
+    if (!guessed || !e.url) continue;
+    const precise = await fetchPreciseTimes(e.url);
+    if (!precise) continue;
+    e.starts_at = precise.start;
+    e.ends_at = precise.end ?? e.ends_at ?? null;
+  }
+
   return out;
 }
 
@@ -132,6 +144,10 @@ function buildEvent(ev: JsonLdEvent): EventInput | null {
 
   const starts = parseStart(ev.startDate);
   if (!starts) return null;
+  // The search-page JSON-LD gives a bare "2026-09-10" for most events, so the
+  // time above is a noon placeholder, not a real start. Flag it so the caller
+  // can go and get the real one.
+  const timeIsGuessed = !/^\d{4}-\d{2}-\d{2}T/.test(ev.startDate);
 
   const loc = ev.location;
   const venueName = loc?.name ?? null;
@@ -155,7 +171,43 @@ function buildEvent(ev: JsonLdEvent): EventInput | null {
     lon: Number.isFinite(lon ?? NaN) ? lon : null,
     image_url: ev.image ?? null,
     categories: classify(ev.name, ev.description ?? ""),
+    raw_json: { timeIsGuessed },
   };
+}
+
+/**
+ * Real start/end for one event, from its own page.
+ *
+ * Eventbrite publishes the exact times as OpenGraph meta on the detail page
+ * ("event:start_time" / "event:end_time"), both with a timezone offset. The
+ * search listing does not carry them at all, which is why every Eventbrite
+ * event used to land at a placeholder noon and sort into the wrong slot.
+ */
+async function fetchPreciseTimes(
+  url: string
+): Promise<{ start: string; end: string | null } | null> {
+  try {
+    const res = await fetch(url, { headers: { "user-agent": UA } });
+    if (!res.ok) return null;
+    const html = await res.text();
+    const pick = (prop: string) =>
+      html.match(
+        new RegExp(`<meta[^>]+property="${prop}"[^>]+content="([^"]+)"`)
+      )?.[1] ?? null;
+    const start = pick("event:start_time");
+    if (!start || Number.isNaN(new Date(start).getTime())) return null;
+    const end = pick("event:end_time");
+    return {
+      start: new Date(start).toISOString(),
+      end: end && !Number.isNaN(new Date(end).getTime())
+        ? new Date(end).toISOString()
+        : null,
+    };
+  } catch {
+    // A single unreachable detail page should leave that event on its
+    // placeholder time rather than sinking the whole source.
+    return null;
+  }
 }
 
 function parseStart(s: string): Date | null {
