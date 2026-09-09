@@ -50,7 +50,7 @@ export const CATEGORY_GROUPS = [
   {
     label: "Social & community",
     pastel: "lilac",
-    categories: ["festival", "food-drink", "market-shopping", "kids-family", "sports"],
+    categories: ["festival", "food-drink", "market-shopping", "kids-family", "sports", "business-networking"],
   },
   {
     label: "Other",
@@ -151,6 +151,7 @@ export const DEFAULT_WEIGHTS: Record<Category, number> = {
   // Used when a scraper can't confidently tag an event, instead of polluting
   // 'experiential' (which earns a +15 bonus and should be reserved for things
   // that genuinely are participatory).
+  "business-networking": 25,
   uncategorized: 0,
   // Public and attendable, but procedural. Weighted well below anything
   // anyone browses for, so Best match buries it without hiding it.
@@ -190,6 +191,7 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   comedy: "Comedy",
   "kids-family": "Family",
   sports: "Sports",
+  "business-networking": "Business & Networking",
   uncategorized: "Other",
   "govt-meeting": "Govt Meetings",
 };
@@ -226,6 +228,7 @@ export const CATEGORY_ICONS: Record<Category, string> = {
   comedy: "😂",
   "kids-family": "👨‍👩‍👧",
   sports: "⚽",
+  "business-networking": "💼",
   uncategorized: "📄",
   "govt-meeting": "🏛️",
 };

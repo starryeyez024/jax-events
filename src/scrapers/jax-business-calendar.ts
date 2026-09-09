@@ -155,19 +155,20 @@ function cityFromAddress(a: string | null): string | null {
 
 function classify(title: string, description: string): Category[] {
   const t = `${title} ${description}`.toLowerCase();
-  const cats = new Set<Category>();
+  // Everything on this calendar is a business event by definition — that is
+  // what the site is. Tagging it explicitly matters because the alternative
+  // was "intellectual-discussion", which in this taxonomy means philosophy
+  // and book clubs, not a chamber networking breakfast.
+  const cats = new Set<Category>(["business-networking"]);
 
   if (/\bai\b|artificial intelligence|tech|software|developer|code|data|cyber|crm/.test(t))
     cats.add("tech-ai-design");
   if (/workshop|training|class|bootcamp|seminar|masterclass|certification/.test(t))
     cats.add("learning-workshop");
-  if (/networking|mixer|meetup|roundtable|breakfast|luncheon|happy hour|social/.test(t))
-    cats.add("intellectual-discussion");
   if (/panel|speaker|keynote|talk|fireside|summit|conference|showcase|pitch/.test(t))
     cats.add("intellectual-discussion");
   if (/coffee|breakfast|lunch|dinner|brunch|wine|beer/.test(t)) cats.add("food-drink");
 
-  if (cats.size === 0) cats.add("intellectual-discussion");
   return [...cats];
 }
 

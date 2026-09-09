@@ -49,8 +49,15 @@ const PROCEDURAL = [
   /\bcommittee\b/,
   /\bcommission\s+meeting\b/,
   /\bcity\s+council\b/,
-  /\bboard\s+(meeting|of\s+adjustment)\b/,
-  /\bnegotiation\b/,
+  // "Board meeting" needs a civic qualifier: a JaxREIA or chamber board
+  // meeting is a members' meeting at a private association, not government
+  // business, and burying it under Govt Meetings is simply wrong.
+  /\b(city|county|planning|zoning|school|community\s+development)\b[^.]{0,30}\bboard\b/,
+  /\bboard\s+of\s+adjustment\b/,
+  // Bare "negotiation" swallowed "Negotiation Skills for Better Business
+  // Outcomes", a training workshop. Require the labour-relations context the
+  // rule was actually written for.
+  /\b(union|contract|collective\s+bargaining|labou?r)\b[^.]{0,24}\bnegotiation/,
   /\bexecutive\s+session\b/,
   /\bbudget\s+(workshop|hearing|session)\b/,
   /\bagenda\s+(review|session)\b/,
