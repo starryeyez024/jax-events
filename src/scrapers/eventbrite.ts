@@ -16,6 +16,7 @@
 import * as cheerio from "cheerio";
 import type { EventInput } from "@/lib/db";
 import type { Category } from "@/lib/categories";
+import { resolveEventTime } from "@/lib/event-time";
 
 const UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 " +
@@ -82,6 +83,7 @@ export async function fetchEventbrite(): Promise<EventInput[]> {
     if (!precise) continue;
     e.starts_at = precise.start;
     e.ends_at = precise.end ?? e.ends_at ?? null;
+    e.all_day = false; // a real time was found, so it is no longer all-day
   }
 
   return out;
@@ -142,12 +144,12 @@ function extractItems(blob: unknown): JsonLdEvent[] {
 function buildEvent(ev: JsonLdEvent): EventInput | null {
   if (!ev.name || !ev.startDate || !ev.url) return null;
 
-  const starts = parseStart(ev.startDate);
-  if (!starts) return null;
-  // The search-page JSON-LD gives a bare "2026-09-10" for most events, so the
-  // time above is a noon placeholder, not a real start. Flag it so the caller
-  // can go and get the real one.
-  const timeIsGuessed = !/^\d{4}-\d{2}-\d{2}T/.test(ev.startDate);
+  // Search-page JSON-LD usually gives a bare "2026-09-10" with no time.
+  // resolveEventTime flags that as all-day instead of inventing an hour; the
+  // caller then tries the detail page for a real one.
+  const resolved = resolveEventTime(ev.startDate);
+  if (!resolved) return null;
+  const timeIsGuessed = resolved.allDay;
 
   const loc = ev.location;
   const venueName = loc?.name ?? null;
@@ -162,8 +164,9 @@ function buildEvent(ev: JsonLdEvent): EventInput | null {
     title: ev.name,
     description: ev.description ?? null,
     url: ev.url,
-    starts_at: starts.toISOString(),
-    ends_at: ev.endDate ? parseEnd(ev.endDate)?.toISOString() ?? null : null,
+    starts_at: resolved.iso,
+    all_day: resolved.allDay,
+    ends_at: ev.endDate ? resolveEventTime(ev.endDate)?.iso ?? null : null,
     venue_name: venueName,
     venue_address: street,
     city,

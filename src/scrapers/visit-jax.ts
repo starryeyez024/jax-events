@@ -11,6 +11,7 @@
 import * as cheerio from "cheerio";
 import type { EventInput } from "@/lib/db";
 import type { Category } from "@/lib/categories";
+import { resolveEventTime } from "@/lib/event-time";
 
 const SITEMAP =
   "https://www.visitjacksonville.com/sitemaps-1-event-default-1-sitemap.xml";
@@ -113,6 +114,20 @@ async function fetchAndParse(url: string): Promise<EventInput | null> {
 
   if (!event) return null;
   if (!event.name || !event.startDate) return null;
+  const startTime = resolveEventTime(event.startDate);
+  if (!startTime) return null;
+  // This feed expresses "no time given" as an explicit midnight Eastern
+  // rather than a bare date — multi-day festivals like Fin Fest, WasabiCon
+  // and Oktoberfest all arrive as T00:00:00-04:00. Treat that as all-day.
+  // (8pm ET shows land on 00:00Z, which is a different thing entirely and
+  // must not be caught here.)
+  const localHM = new Date(startTime.iso).toLocaleTimeString("en-US", {
+    timeZone: "America/New_York",
+    hour12: false,
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  const isMidnightLocal = localHM === "00:00" || localHM === "24:00";
 
   const ev = event as JsonLdEvent; // narrow for downstream access
   const venueName =
@@ -146,7 +161,10 @@ async function fetchAndParse(url: string): Promise<EventInput | null> {
     title: ev.name,
     description: ev.description ?? null,
     url: ev.url ?? ev.mainEntityOfPage ?? url,
-    starts_at: ev.startDate,
+    // A bare "2026-09-10" parsed by Date() becomes UTC midnight, which
+    // renders as 8pm the previous day in Eastern — wrong day and a fake time.
+    starts_at: startTime.iso,
+    all_day: startTime.allDay || isMidnightLocal,
     ends_at: ev.endDate ?? null,
     venue_name: venueName,
     venue_address: street,

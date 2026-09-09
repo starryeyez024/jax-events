@@ -466,12 +466,13 @@ function formatEventDateLabel(event: EventWithExtras): string {
     }
     return ""; // the "Ongoing" badge carries the meaning
   }
+  // An invented time reads as fact; an absent one reads as absent. When the
+  // source published only a date, show only the date.
   return new Date(event.starts_at).toLocaleString("en-US", {
     weekday: "short",
     month: "short",
     day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
+    ...(event.all_day ? {} : { hour: "numeric" as const, minute: "2-digit" as const }),
   });
 }
 
