@@ -157,7 +157,7 @@ async function fetchAndParse(url: string): Promise<EventInput | null> {
     // (e.g. "Daytona", "Orlando") which the haystack scan still catches.
     city: city ?? inferCityFromTitle(ev.name) ?? "Jacksonville",
     image_url: image,
-    categories: classify(ev.name, ev.description ?? ""),
+    categories: classify(ev.name, ev.description ?? "", venueName ?? ""),
   };
 }
 
@@ -183,48 +183,86 @@ function inferCityFromTitle(title: string): string | null {
   return null;
 }
 
-function classify(title: string, description: string): Category[] {
+function classify(title: string, description: string, venue = ""): Category[] {
+  // Every pattern is word-bounded. Unanchored substrings were matching inside
+  // ordinary words and mislabelling most of this source: /ai/ hit "acclaimed"
+  // and "available" so touring concerts came back as tech-ai-design, /class/
+  // hit "classic" so any "holiday classic" became a workshop, /alt/ hit
+  // "salt" and "health", /park/ hit "parking" and "sparkle" (present in
+  // nearly every venue blurb), /sup/ hit "supper", /dive/ hit "diverse",
+  // /rap/ hit "therapy".
+  const t = title.toLowerCase();
   const blob = `${title} ${description}`.toLowerCase();
+
+  // Activity and format claims come from the title. A description mentioning
+  // a workshop, a class or a market is usually context, not what this is.
+  const inTitle = (re: RegExp) => re.test(t);
+  const anywhere = (re: RegExp) => re.test(blob);
+
   const out = new Set<Category>();
 
-  if (/swing dance|lindy hop|west coast swing|salsa|bachata/.test(blob)) {
+  if (anywhere(/\bswing dance\b|\blindy hop\b|\bwest coast swing\b|\bsalsa\b|\bbachata\b/)) {
     out.add("dance-other");
-    if (/swing|lindy/.test(blob)) out.add("swing-dance");
+    if (anywhere(/\bswing\b|\blindy\b/)) out.add("swing-dance");
   }
-  if (/jazz/.test(blob)) out.add("music-swing-jazz");
-  if (/hip[- ]?hop|rap/.test(blob)) out.add("music-00s-hiphop");
-  if (/rock|alt|metal|punk/.test(blob)) out.add("music-90s-rock");
-  if (/concert|band|live music|symphony/.test(blob)) out.add("music-live-other");
-  if (/yoga|wellness/.test(blob)) out.add("yoga");
-  if (/sound bath|gong/.test(blob)) out.add("sound-bath");
-  if (/kayak|paddle|sup/.test(blob)) out.add("kayaking");
-  if (/snorkel|dive/.test(blob)) out.add("snorkeling");
-  if (/sail|boat ride|harbor cruise/.test(blob)) out.add("boat-ride");
-  if (/cycling|bike ride/.test(blob)) out.add("cycling");
-  if (/art walk|gallery|exhibit|museum/.test(blob)) out.add("art-exhibition");
-  if (/workshop|class|hands[- ]on/.test(blob)) {
+  if (anywhere(/\bjazz\b/)) out.add("music-swing-jazz");
+  if (anywhere(/\bhip[- ]?hop\b|\brap\b|\brapper\b/)) out.add("music-00s-hiphop");
+  if (anywhere(/\brock\b|\bmetal\b|\bpunk\b|\balt[- ]rock\b|\balternative\b/))
+    out.add("music-90s-rock");
+  if (anywhere(/\bconcert\b|\bband\b|\blive music\b|\bsymphony\b/)) out.add("music-live-other");
+  if (anywhere(/\byoga\b|\bwellness\b/)) out.add("yoga");
+  if (anywhere(/\bsound bath\b|\bgong\b/)) out.add("sound-bath");
+  if (anywhere(/\bkayak\w*\b|\bpaddle\w*\b|\bstand[- ]up paddle\b/)) out.add("kayaking");
+  if (anywhere(/\bsnorkel\w*\b|\bscuba\b|\bdiving\b/)) out.add("snorkeling");
+  if (anywhere(/\bsail\w*\b|\bboat ride\b|\bharbor cruise\b/)) out.add("boat-ride");
+  if (anywhere(/\bcycling\b|\bbike ride\b/)) out.add("cycling");
+  if (anywhere(/\bart walk\b|\bgallery\b|\bexhibit\w*\b|\bmuseum\b/)) out.add("art-exhibition");
+
+  if (inTitle(/\bworkshop\b|\bclass\b|\bclasses\b|\bhands[- ]on\b/)) {
     out.add("learning-workshop");
-    // "Yoga class" matches /class/ — avoid double-counting experiential on
-    // structured classes where yoga is the real signal.
     if (!out.has("yoga")) out.add("experiential");
   }
-  if (/maker|3d print|laser|pottery|ceramics|painting/.test(blob)) {
+  if (inTitle(/\bmaker\b|\b3d print\w*\b|\blaser\b|\bpottery\b|\bceramics\b|\bpainting\b|\bpaint\b/)) {
     out.add("maker-space");
     out.add("experiential");
   }
-  if (/philosophy|debate|stoic/.test(blob)) out.add("philosophy");
-  if (/talk|lecture|panel|forum|discussion/.test(blob)) {
+  if (anywhere(/\bphilosophy\b|\bdebate\b|\bstoic\w*\b/)) out.add("philosophy");
+  if (inTitle(/\btalk\b|\blecture\b|\bpanel\b|\bforum\b|\bdiscussion\b/)) {
     out.add("intellectual-discussion");
   }
-  if (/ai|machine learning|tech meetup/.test(blob)) out.add("tech-ai-design");
-  if (/market|maker.?market|craft fair/.test(blob)) out.add("market-shopping");
-  if (/festival|street party|fest\b/.test(blob)) out.add("festival");
-  if (/family|kids/.test(blob)) out.add("kids-family");
-  if (/soccer|football|baseball|basketball|sporting jax|usl/.test(blob)) {
+  if (anywhere(/\bai\b|\bartificial intelligence\b|\bmachine learning\b|\btech meetup\b/))
+    out.add("tech-ai-design");
+  if (inTitle(/\bmarket\b|\bcraft fair\b|\bflea\b/)) out.add("market-shopping");
+  if (anywhere(/\bfestival\b|\bstreet party\b|\bfest\b/)) out.add("festival");
+  if (inTitle(/\bfamily\b|\bkids\b|\bchildren\b|\ball ages\b/)) out.add("kids-family");
+  if (anywhere(/\bsoccer\b|\bfootball\b|\bbaseball\b|\bbasketball\b|\bsporting jax\b|\busl\b/)) {
     out.add("sports");
   }
-  if (/comedy|stand[- ]up/.test(blob)) out.add("comedy");
-  if (/nature|preserve|trail|hike|park/.test(blob)) out.add("outdoor-nature");
+  if (anywhere(/\bcomedy\b|\bstand[- ]up\b|\bcomedian\b/)) out.add("comedy");
+  // "park" alone matched parking and sparkle; require it to name a park or a
+  // genuine outdoor activity.
+  if (inTitle(/\bnature\b|\bpreserve\b|\btrail\b|\bhike\b|\bhiking\b|\bpark\b|\bgarden\b/))
+    out.add("outdoor-nature");
+
+  // Stage formats. Tightening the keyword rules left a third of this source
+  // matching nothing at all — touring concerts, film screenings and musicals
+  // carry no activity vocabulary, and their old tags came from accidents like
+  // "rock" inside "Rocky Horror".
+  if (anywhere(/\btheat(er|re)\b|\bmusical\b|\bbroadway\b|\bopera\b|\bballet\b|\bplay\b/))
+    out.add("theater");
+  if (anywhere(/\bfilm\b|\bscreening\b|\bmovie\b|\bpicture show\b|\bcinema\b/))
+    out.add("theater");
+
+  // Venue is a far more reliable signal than prose for the "an evening with
+  // <artist>" listings that dominate this feed and describe nothing.
+  const v = venue.toLowerCase();
+  if (out.size === 0) {
+    if (/florida theatre|moran theater|performing arts|ritz theatre|amphitheat|daily's place|decca|myth|jack rabbits|1904 music hall|intuition/.test(v))
+      out.add("music-live-other");
+    else if (/comedy zone/.test(v)) out.add("comedy");
+    else if (/museum|gallery/.test(v)) out.add("art-exhibition");
+    else if (/park|preserve|garden/.test(v)) out.add("outdoor-nature");
+  }
 
   if (out.size === 0) out.add("uncategorized");
   return Array.from(out);

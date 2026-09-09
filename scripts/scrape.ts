@@ -66,6 +66,20 @@ async function main() {
           fetched: events.length,
           duration_ms: ms,
         });
+        // Drop rows this source has stopped publishing. Without this they sit
+        // forever with whatever categories they were given when first seen —
+        // three copies of one Cummer exhibition were still carrying tags from
+        // a classifier fixed months later. 21 days is deliberately generous:
+        // a source that briefly returns a short list should not lose events
+        // it will publish again next week.
+        const pruned = db
+          .prepare(
+            `DELETE FROM events
+             WHERE source = ?
+               AND last_seen_at < datetime('now', '-21 days')`
+          )
+          .run(name).changes;
+        if (pruned) console.log(`  ${name.padEnd(18)} pruned ${pruned} stale row(s)`);
       } catch (err) {
         const ms = Date.now() - t0;
         const message = (err as Error).message;
