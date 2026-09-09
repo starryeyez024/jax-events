@@ -89,8 +89,12 @@ const SCHEDULES: Schedule[] = [
     venue: "The RiversEdge Lawn",
     address: "RiversEdge, San Marco, Jacksonville, FL 32207",
     city: "Jacksonville",
-    url: "https://yoga-den.com/",
-    description: "Free Wednesday evening yoga on the RiversEdge lawn, hosted by Yoga Den.",
+    // The San Marco location page. The URL supplied also carried an fbclid
+    // and an _mt schedule deep-link pinned to activeDate=2026-09-09, both of
+    // which rot — the location page is the stable entry point.
+    url: "https://yoga-den.com/location/san-marco/",
+    description:
+      "Free Wednesday evening yoga on the RiversEdge lawn, hosted by Yoga Den San Marco. Check their schedule to confirm before heading out.",
     price: 0,
     categories: ["yoga", "health-wellness", "outdoor-nature"],
   },

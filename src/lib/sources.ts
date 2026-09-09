@@ -69,6 +69,13 @@ export const SOURCE_META: Record<string, SourceMeta> = {
     covers: "The city's swing-dance scene across several venues, via their public calendar.",
     kind: "scraper",
   },
+  "jax-business-calendar": {
+    label: "JAX Business Calendar",
+    url: "https://jaxbusinesscalendar.com/events",
+    covers:
+      "Community-submitted Jacksonville business events — networking breakfasts, workshops, pitch nights, tech meetups and chamber gatherings.",
+    kind: "scraper",
+  },
   "kava-and-company": {
     label: "Kava & Company",
     url: "https://kavaandcompany.com/events/",

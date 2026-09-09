@@ -44,6 +44,21 @@ const VENUES: Record<string, { name: string; address: string; city: string }> = 
   },
 };
 
+/**
+ * Known dates for biweekly events, which the page cannot express.
+ *
+ * "EVERY OTHER MON" tells us the cadence but not the phase — half the
+ * Mondays are right and half are wrong, and the page publishes no reference
+ * week anywhere. One confirmed occurrence pins the whole series; without one
+ * the event falls back to a dated-free evergreen entry rather than guessing.
+ *
+ * Keyed by lowercased title, value is any single date the event ran or will
+ * run, as YYYY-MM-DD local.
+ */
+const BIWEEKLY_ANCHORS: Record<string, string> = {
+  // "name that tune w/ dj diamond": "2026-09-14",
+};
+
 const DOW: Record<string, number> = {
   SUN: 0, MON: 1, TUE: 2, WED: 3, THU: 4, FRI: 5, SAT: 6,
 };
@@ -86,7 +101,7 @@ export async function fetchKavaAndCompany(): Promise<EventInput[]> {
     const { startMin, endMin } = parseTimeRange(timeText);
     if (startMin == null) return;
 
-    const rule = parseRecurrence(dayRaw);
+    const rule = parseRecurrence(dayRaw, title);
 
     // Unanchored biweekly ("EVERY OTHER MON") can't be resolved to real dates
     // from this page — there's no reference week anywhere in the markup.
@@ -163,13 +178,21 @@ type Rule =
   | { kind: "weekly"; weekdays: number[] }
   | { kind: "nth"; weekday: number; ordinals: number[] } // 1-4
   | { kind: "last"; weekday: number }
+  | { kind: "biweekly"; weekday: number; anchor: Date }
   | { kind: "unresolved"; weekdays: number[] };
 
-function parseRecurrence(raw: string): Rule {
+function parseRecurrence(raw: string, title: string): Rule {
   const weekdays = parseWeekdays(raw);
 
-  // "EVERY OTHER MON" — biweekly with no anchor date published.
-  if (/EVERY OTHER/.test(raw)) return { kind: "unresolved", weekdays };
+  // "EVERY OTHER MON" — biweekly. Resolvable only if we know one real date;
+  // see BIWEEKLY_ANCHORS.
+  if (/EVERY OTHER/.test(raw)) {
+    const anchor = BIWEEKLY_ANCHORS[title.trim().toLowerCase()];
+    if (anchor && weekdays.length === 1) {
+      return { kind: "biweekly", weekday: weekdays[0], anchor: parseLocalDay(anchor) };
+    }
+    return { kind: "unresolved", weekdays };
+  }
 
   // "LAST WED"
   if (/\bLAST\b/.test(raw) && weekdays.length === 1) {
@@ -223,6 +246,14 @@ function matches(rule: Rule, d: Date): boolean {
       return d.getDay() === rule.weekday && rule.ordinals.includes(weekOfMonth(d));
     case "last":
       return d.getDay() === rule.weekday && isLastWeekdayOfMonth(d);
+    case "biweekly": {
+      if (d.getDay() !== rule.weekday) return false;
+      // Whole days between, so DST transitions cannot shift the parity.
+      const days = Math.round(
+        (startOfDay(d).getTime() - startOfDay(rule.anchor).getTime()) / 86_400_000
+      );
+      return days % 14 === 0;
+    }
     case "unresolved":
       return false;
   }
@@ -276,6 +307,12 @@ function withMinutes(day: Date, minutes: number): Date {
   const d = startOfDay(day);
   d.setMinutes(minutes);
   return d;
+}
+
+/** YYYY-MM-DD -> local midnight (not UTC, which can land a day earlier). */
+function parseLocalDay(v: string): Date {
+  const [y, m, d] = v.split("-").map(Number);
+  return new Date(y, m - 1, d);
 }
 
 function startOfDay(d: Date): Date {
