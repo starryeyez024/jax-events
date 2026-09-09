@@ -308,15 +308,22 @@ export default function Home() {
           sidebarOpen ? "md:gap-10" : "md:gap-4"
         }`}
       >
-        {/* sticky lives on the aside itself, not on an inner div. This
-            element has overflow-hidden (to clip the width animation), which
-            makes it a scroll container — so a sticky child resolves against
-            the aside rather than the viewport, which both pushed the panel
-            down by `top` at every scroll position and stopped it ever
-            tracking the viewport. self-start is required too: a stretched
-            flex item fills the row, leaving nothing to scroll past. */}
+        {/* sticky lives on the aside itself, not on an inner div. A sticky
+            child would resolve against the aside (which clips overflow, making
+            it a scroll container) rather than the viewport — that offset the
+            panel by `top` at every scroll position and stopped it tracking the
+            viewport at all. self-start is required too: a stretched flex item
+            fills the row, leaving nothing to scroll past.
+
+            The panel is taller than most viewports, and a sticky element does
+            not scroll — so its lower half used to be unreachable until you had
+            scrolled past the entire results list. Capping its height at the
+            viewport and letting it scroll its own overflow gives the two
+            columns independent scrolling. overflow-x stays hidden to clip the
+            collapse animation; naming the axes separately is what allows y to
+            scroll while x still clips. */}
         <aside
-          className={`shrink-0 overflow-hidden md:sticky md:top-6 md:self-start transition-[width] duration-300 ease-out motion-reduce:transition-none w-full ${
+          className={`shrink-0 overflow-x-hidden md:sticky md:top-6 md:self-start md:max-h-[calc(100vh-3rem)] md:overflow-y-auto overscroll-contain transition-[width] duration-300 ease-out motion-reduce:transition-none w-full ${
             sidebarOpen ? "md:w-[300px]" : "md:w-[56px]"
           }`}
         >
