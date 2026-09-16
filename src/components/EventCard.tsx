@@ -253,7 +253,10 @@ export function EventCard({ event, onChange, onShowToast }: Props) {
               </span>
             )}
           </div>
-          <h3 className="font-display font-bold text-xl tracking-tight mt-1.5 leading-snug">
+          {/* h2, not h3: an event is top-level content under the page's h1,
+              not a subsection of anything. There is no intervening heading
+              between the wordmark and this, so h3 was skipping a level. */}
+          <h2 className="font-display font-bold text-2xl md:text-[1.6rem] tracking-tight mt-1.5 leading-[1.15]">
             {event.url ? (
               <a
                 href={event.url}
@@ -266,7 +269,7 @@ export function EventCard({ event, onChange, onShowToast }: Props) {
             ) : (
               event.title
             )}
-          </h3>
+          </h2>
           {addressLine && (
             <div className="text-xs text-slate-500 mt-0.5">
               {event.map_link ? (

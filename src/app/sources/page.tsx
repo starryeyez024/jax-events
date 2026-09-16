@@ -97,7 +97,9 @@ function SourceRow({ s }: { s: SourceStatus }) {
   return (
     <li className="rounded-lg border border-slate-200 bg-white/70 backdrop-blur p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h3 className="font-display font-semibold text-slate-900">
+        {/* Also h2: these rows are not subsections of "The short version",
+            which is the only h2 above them. */}
+        <h2 className="font-display font-semibold text-slate-900 text-lg">
           {s.url ? (
             <a
               href={s.url}
@@ -110,7 +112,7 @@ function SourceRow({ s }: { s: SourceStatus }) {
           ) : (
             s.label
           )}
-        </h3>
+        </h2>
         <span className="text-[12.8px] text-slate-500">
           {s.kind === "manual"
             ? "entered by hand"
