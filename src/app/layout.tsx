@@ -1,6 +1,6 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { Noto_Sans, Montserrat, Instrument_Serif } from "next/font/google";
+import { Noto_Sans, Bricolage_Grotesque, Instrument_Serif } from "next/font/google";
 
 // Noto Sans for body text — humanist, neutral, very legible across weights.
 // Exposed as a CSS variable so the Tailwind `font-sans` token picks it up.
@@ -10,11 +10,16 @@ const notoSans = Noto_Sans({
   display: "swap",
 });
 
-// Montserrat for section headings (event titles, sidebar headings, etc.) —
-// geometric, modern. Mapped to the Tailwind `font-display` token.
-const montserrat = Montserrat({
+// Bricolage Grotesque for headings — event titles, the result count, panel
+// headings. Montserrat is a clean geometric but a very familiar one, and next
+// to an editorial serif wordmark it read as default rather than chosen.
+// Bricolage has drawn character in its letterforms (the humanised, slightly
+// irregular direction) while staying a grotesque, so a dense list of event
+// titles is still scannable at a glance — which a display serif at 20px
+// would not be.
+const bricolage = Bricolage_Grotesque({
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
+  weight: ["500", "600", "700", "800"],
   variable: "--font-display",
   display: "swap",
 });
@@ -75,7 +80,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${notoSans.variable} ${montserrat.variable} ${instrumentSerif.variable}`}>
+    <html lang="en" className={`${notoSans.variable} ${bricolage.variable} ${instrumentSerif.variable}`}>
       <body className="text-slate-900 min-h-screen antialiased font-sans">
         {children}
       </body>

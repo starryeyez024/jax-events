@@ -7,7 +7,7 @@ const config: Config = {
       fontFamily: {
         // Loaded via next/font in layout.tsx and exposed as CSS variables.
         //   sans    → Noto Sans (humanist body face)
-        //   display → Montserrat (section headings, event titles)
+        //   display → Bricolage Grotesque (headings, event titles)
         //   title   → Instrument Serif (the wordmark only — high-contrast
         //             editorial serif, sized large over the hero photo)
         // System fallbacks keep the app usable if Google Fonts fails.
