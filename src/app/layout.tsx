@@ -1,6 +1,6 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { Noto_Sans, Montserrat, Sigmar } from "next/font/google";
+import { Noto_Sans, Montserrat, Instrument_Serif } from "next/font/google";
 
 // Noto Sans for body text — humanist, neutral, very legible across weights.
 // Exposed as a CSS variable so the Tailwind `font-sans` token picks it up.
@@ -19,10 +19,12 @@ const montserrat = Montserrat({
   display: "swap",
 });
 
-// Sigmar — chunky, playful display face reserved for the main page title
-// ("Jax Beach Fun Times"). Single weight available. Used only via the
-// `font-title` Tailwind alias.
-const sigmar = Sigmar({
+// Instrument Serif for the wordmark. Sigmar's chunky novelty read as a
+// sticker sitting on top of the skyline photo rather than part of it; a
+// high-contrast editorial serif holds its own against a photograph and gives
+// the masthead the cinematic register the rest of the hero is going for.
+// Single weight, which is all a wordmark needs.
+const instrumentSerif = Instrument_Serif({
   subsets: ["latin"],
   weight: "400",
   variable: "--font-title",
@@ -73,7 +75,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${notoSans.variable} ${montserrat.variable} ${sigmar.variable}`}>
+    <html lang="en" className={`${notoSans.variable} ${montserrat.variable} ${instrumentSerif.variable}`}>
       <body className="text-slate-900 min-h-screen antialiased font-sans">
         {children}
       </body>

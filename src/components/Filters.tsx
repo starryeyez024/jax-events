@@ -118,7 +118,7 @@ export function Filters({
 
   return (
     <div
-      className={`bg-white rounded-3xl border border-slate-200 space-y-5 p-5 ${
+      className={`bg-white rounded-lg border border-slate-200 space-y-5 p-5 ${
         collapsed ? "md:p-2" : ""
       }`}
     >
@@ -190,7 +190,7 @@ export function Filters({
             <span className="text-slate-500 font-medium uppercase tracking-wider text-[10px]">From</span>
             <input
               type="date"
-              className="border border-slate-200 rounded-xl px-3 py-1.5 bg-sand-50 focus:outline-none focus:bg-white focus:border-slate-300 transition"
+              className="border border-slate-200 rounded-md px-3 py-1.5 bg-sand-50 focus:outline-none focus:bg-white focus:border-slate-300 transition"
               value={value.from}
               onChange={(e) => onChange({ ...value, from: e.target.value })}
             />
@@ -199,7 +199,7 @@ export function Filters({
             <span className="text-slate-500 font-medium uppercase tracking-wider text-[10px]">To</span>
             <input
               type="date"
-              className="border border-slate-200 rounded-xl px-3 py-1.5 bg-sand-50 focus:outline-none focus:bg-white focus:border-slate-300 transition"
+              className="border border-slate-200 rounded-md px-3 py-1.5 bg-sand-50 focus:outline-none focus:bg-white focus:border-slate-300 transition"
               value={value.to}
               onChange={(e) => onChange({ ...value, to: e.target.value })}
             />

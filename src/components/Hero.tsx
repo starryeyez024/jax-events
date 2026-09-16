@@ -65,7 +65,9 @@ export function Hero({ actions }: { actions: ReactNode }) {
           <div className="flex justify-end pt-4 md:pt-6">{actions}</div>
 
           <div className="mt-auto pb-6 md:pb-8">
-            <h1 className="font-title text-white leading-[0.9] tracking-tight text-[2.75rem] sm:text-6xl lg:text-7xl drop-shadow-[0_2px_24px_rgba(0,0,0,0.45)]">
+            {/* A serif at this weight needs more size and looser tracking than
+                the chunky face it replaced to hold the same presence. */}
+            <h1 className="font-title text-white leading-[0.85] tracking-[-0.015em] text-[3.25rem] sm:text-7xl lg:text-8xl drop-shadow-[0_2px_28px_rgba(0,0,0,0.5)]">
               <span aria-hidden className="mr-2 md:mr-3">🏄</span>
               Wavelength
             </h1>

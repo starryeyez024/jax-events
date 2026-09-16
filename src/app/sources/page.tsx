@@ -55,7 +55,7 @@ export default function SourcesPage() {
         </p>
       </header>
 
-      <section className="mb-8 rounded-2xl border border-slate-200 bg-white/70 backdrop-blur p-5">
+      <section className="mb-8 rounded-lg border border-slate-200 bg-white/70 backdrop-blur p-5">
         <h2 className="font-display font-semibold text-slate-900 text-sm mb-2">
           The short version
         </h2>
@@ -95,7 +95,7 @@ function SourceRow({ s }: { s: SourceStatus }) {
   const daysOut = s.covers_through ? daysFromNow(s.covers_through) : null;
 
   return (
-    <li className="rounded-2xl border border-slate-200 bg-white/70 backdrop-blur p-4">
+    <li className="rounded-lg border border-slate-200 bg-white/70 backdrop-blur p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <h3 className="font-display font-semibold text-slate-900">
           {s.url ? (

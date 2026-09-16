@@ -46,7 +46,7 @@ export function UndoToast({ toast, onDismiss, durationMs = 5000 }: Props) {
     <div
       role="status"
       aria-live="polite"
-      className="fixed bottom-6 right-6 z-50 flex items-center gap-4 rounded-2xl border border-slate-300 bg-white/95 backdrop-blur-md text-slate-800 px-5 py-3 text-sm max-w-sm"
+      className="fixed bottom-6 right-6 z-50 flex items-center gap-4 rounded-lg border border-slate-300 bg-white/95 backdrop-blur-md text-slate-800 px-5 py-3 text-sm max-w-sm"
     >
       <span className="flex-1 min-w-0 truncate">{toast.message}</span>
       <button

@@ -189,7 +189,7 @@ export function EventCard({ event, onChange, onShowToast }: Props) {
     .join(", ");
 
   return (
-    <div className={`rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-sand-50/70 p-5 transition hover:border-slate-300 hover:-translate-y-px duration-150 ${cardAccent}`}>
+    <div className={`rounded-lg border border-slate-200 bg-gradient-to-b from-white to-sand-50/70 p-5 transition hover:border-slate-300 hover:-translate-y-px duration-150 ${cardAccent}`}>
       {localRegistered === 1 && (
         <div className="text-xs font-medium text-pastel-ink-lilac mb-2 flex items-center gap-1.5">
           <span>📅</span>

@@ -8,8 +8,8 @@ const config: Config = {
         // Loaded via next/font in layout.tsx and exposed as CSS variables.
         //   sans    → Noto Sans (humanist body face)
         //   display → Montserrat (section headings, event titles)
-        //   title   → Sigmar (only the "Jax Beach Fun Times" h1 — chunky,
-        //             playful, reserved for the brand wordmark)
+        //   title   → Instrument Serif (the wordmark only — high-contrast
+        //             editorial serif, sized large over the hero photo)
         // System fallbacks keep the app usable if Google Fonts fails.
         sans: ["var(--font-body)", "ui-sans-serif", "system-ui", "sans-serif"],
         display: ["var(--font-display)", "ui-sans-serif", "system-ui", "sans-serif"],

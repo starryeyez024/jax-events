@@ -374,7 +374,7 @@ export default function Home() {
               )}
               <div className="space-y-3">
                 {visible.length === 0 && !loading && (
-                  <div className="text-sm text-slate-600 bg-white border border-slate-200 rounded-2xl p-6 text-center">
+                  <div className="text-sm text-slate-600 bg-white border border-slate-200 rounded-lg p-6 text-center">
                     No events match. Try widening the date range or clearing filters.
                   </div>
                 )}

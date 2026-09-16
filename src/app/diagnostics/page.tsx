@@ -76,7 +76,7 @@ export default function DiagnosticsPage() {
             {broken.map((s) => (
               <div
                 key={s.source}
-                className="rounded-xl border border-rose-200 bg-rose-50/60 p-3"
+                className="rounded-md border border-rose-200 bg-rose-50/60 p-3"
               >
                 <div className="flex flex-wrap items-baseline justify-between gap-x-4">
                   <code className="font-mono text-[13px] font-semibold text-slate-900">
@@ -107,7 +107,7 @@ export default function DiagnosticsPage() {
           <h2 className="font-display font-semibold text-slate-900 mb-3">
             Healthy ({ok.length})
           </h2>
-          <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white/70 backdrop-blur">
+          <div className="overflow-x-auto rounded-md border border-slate-200 bg-white/70 backdrop-blur">
             <table className="w-full text-[13px]">
               <thead className="text-left text-slate-500 border-b border-slate-200">
                 <tr>
