@@ -33,3 +33,19 @@ body {
   outline-offset: 1px;
   border-radius: 6px;
 }
+
+/* Hero grain. An SVG turbulence tile rather than an image file: a few hundred
+   bytes inline, and it tiles without a visible seam at any hero height.
+   Without it, a phone photo under a flat gradient reads as synthetic. */
+.hero-grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+}
+
+/* Slow settle on the skyline — cinematic motion, but it finishes and stops
+   rather than looping, so it never competes with the list for attention.
+   motion-safe: in the markup keeps it off for reduced-motion users. */
+@keyframes heroDrift {
+  from { transform: scale(1.08); }
+  to   { transform: scale(1); }
+}

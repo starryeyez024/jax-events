@@ -10,6 +10,7 @@ import { CATEGORIES } from "@/lib/categories";
 import { TipModal } from "@/components/TipModal";
 import { UndoToast, type ToastState } from "@/components/UndoToast";
 import { ShareMenu } from "@/components/ShareMenu";
+import { Hero } from "@/components/Hero";
 import { READ_ONLY } from "@/lib/config";
 import { filterEvents } from "@/lib/filter-events";
 import { decodeViewState, encodeViewState, type Defaults } from "@/lib/url-state";
@@ -24,6 +25,11 @@ function plusDaysIso(n: number): string {
   d.setDate(d.getDate() + n);
   return d.toISOString().slice(0, 10);
 }
+
+// Frosted glass over the photo: 2026's refined glassmorphism, and it keeps
+// the controls legible over whatever part of the skyline sits behind them.
+const HERO_BTN =
+  "px-4 py-2 text-[12.8px] font-medium rounded-full border border-white/25 bg-white/10 text-white backdrop-blur-md hover:bg-white/20 hover:border-white/40 transition";
 
 type SortMode = "match" | "chrono";
 
@@ -249,47 +255,37 @@ export default function Home() {
   }, [events, sort]);
 
   return (
-    <div className="max-w-7xl mx-auto p-4 md:p-8">
-      <header className="flex flex-wrap items-end justify-between gap-4 mb-8">
-        <div>
-          <h1 className="font-title text-3xl md:text-4xl tracking-tight text-slate-900 leading-none">
-            <span aria-hidden className="mr-2">🏄</span>
-            Wavelength
-          </h1>
-          <p className="text-base text-slate-700 mt-2 font-medium">
-            Events on your wavelength · Jacksonville, FL
-          </p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap justify-end">
-          <Link
-            href="/sources"
-            className="px-4 py-2 text-[12.8px] font-medium rounded-full border border-slate-200 bg-white/70 backdrop-blur hover:bg-white hover:border-slate-300 transition"
-            title="Where these events come from and how current each source is"
-          >
-            Sources &amp; freshness
-          </Link>
-          {!READ_ONLY && (
-            <button
-              onClick={() => setTipOpen(true)}
-              className="px-4 py-2 text-[12.8px] font-medium rounded-full border border-slate-200 bg-white/70 backdrop-blur hover:bg-white hover:border-slate-300 transition"
-              title="Saw an event on Instagram, Facebook, or elsewhere? Paste it here and Claude will extract the details."
-            >
-              ＋ Add tip
-            </button>
-          )}
-          <ShareMenu getShareUrl={buildShareUrl} showIcsExport={!READ_ONLY} />
-          {!READ_ONLY && (
-            <button
-              onClick={refreshScrapers}
-              disabled={refreshing}
-              className="px-4 py-2 text-sm font-medium rounded-full border border-slate-200 bg-white/70 backdrop-blur hover:bg-white hover:border-slate-300 transition disabled:opacity-50"
-              title="Pull fresh events from configured sources"
-            >
-              {refreshing ? "Refreshing…" : "↻ Refresh"}
-            </button>
-          )}
-        </div>
-      </header>
+    <>
+      {/* The masthead runs full-bleed, outside the content column, so the
+          skyline reads as a photograph rather than a banner inside a card. */}
+      <Hero
+        actions={
+          <div className="flex items-center gap-2 flex-wrap justify-end">
+            {!READ_ONLY && (
+              <button
+                onClick={() => setTipOpen(true)}
+                className={HERO_BTN}
+                title="Saw an event on Instagram, Facebook, or elsewhere? Paste it here and Claude will extract the details."
+              >
+                ＋ Add tip
+              </button>
+            )}
+            <ShareMenu getShareUrl={buildShareUrl} showIcsExport={!READ_ONLY} onDark />
+            {!READ_ONLY && (
+              <button
+                onClick={refreshScrapers}
+                disabled={refreshing}
+                className={`${HERO_BTN} disabled:opacity-50`}
+                title="Pull fresh events from configured sources"
+              >
+                {refreshing ? "Refreshing…" : "↻ Refresh"}
+              </button>
+            )}
+          </div>
+        }
+      />
+
+    <div className="max-w-7xl mx-auto px-4 md:px-8 pb-8 pt-6">
 
       {refreshReport && (
         <div className="text-xs text-slate-600 mb-2 px-2">{refreshReport}</div>
@@ -404,6 +400,7 @@ export default function Home() {
         </main>
       </div>
     </div>
+    </>
   );
 }
 

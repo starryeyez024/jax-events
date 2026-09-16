@@ -7,6 +7,8 @@ type Props = {
   getShareUrl: () => string;
   /** Hidden in read-only mode, where there is no registration to export. */
   showIcsExport: boolean;
+  /** Frosted-glass styling for sitting on the hero photograph. */
+  onDark?: boolean;
 };
 
 /**
@@ -17,7 +19,7 @@ type Props = {
  * button in the header, plus a duplicate .ics link inside the calendar — which
  * read as three unrelated features rather than one idea.
  */
-export function ShareMenu({ getShareUrl, showIcsExport }: Props) {
+export function ShareMenu({ getShareUrl, showIcsExport, onDark }: Props) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState<"link" | "feed" | null>(null);
   const ref = useRef<HTMLDivElement>(null);
@@ -57,7 +59,11 @@ export function ShareMenu({ getShareUrl, showIcsExport }: Props) {
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="px-4 py-2 text-[12.8px] font-medium rounded-full border border-slate-200 bg-white/70 backdrop-blur hover:bg-white hover:border-slate-300 transition"
+        className={`px-4 py-2 text-[12.8px] font-medium rounded-full border backdrop-blur-md transition ${
+          onDark
+            ? "border-white/25 bg-white/10 text-white hover:bg-white/20 hover:border-white/40"
+            : "border-slate-200 bg-white/70 hover:bg-white hover:border-slate-300"
+        }`}
         title="Copy a link to this view, or export to a calendar app"
       >
         🔗 Share <span aria-hidden className="ml-0.5 text-slate-400">▾</span>
