@@ -38,8 +38,9 @@ export function Hero({ actions }: { actions: ReactNode }) {
           never gets so tall it pushes the results below the fold. */}
       <div className="relative h-[210px] sm:h-[250px] lg:h-[290px]">
         {/* The photo is a CSS background (see .hero-photo in globals.css),
-            not an <img>, so its framing is one value — --hero-pos — rather
-            than an object-position buried in this file. */}
+            not an <img>, so the crop lives in plain background-size and
+            background-position and is tuned per breakpoint — phone and
+            desktop want different framing, not the same framing scaled. */}
         <div
           aria-hidden
           className="absolute inset-0 hero-photo motion-safe:animate-[heroDrift_28s_ease-out_forwards]"

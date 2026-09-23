@@ -53,28 +53,34 @@ body {
 /* ---------------------------------------------------------------------------
    Hero photograph.
 
-   A CSS background rather than an <img>, so the crop is tunable from one
-   place: change --hero-pos below and the framing moves. The value is a
-   standard background-position — first number is horizontal, second vertical,
-   so 50% 62% sits the skyline just below centre.
+   A CSS background rather than an <img>, so the crop is tunable from here.
+   Size and position are separate per breakpoint because the two viewports
+   want genuinely different framing, not the same framing scaled:
 
-   Two files, switched on width, because a background cannot generate its own
-   derivatives the way next/image did: a phone would otherwise download the
-   full desktop image for a 210px-tall band.
+     mobile  — the band is nearly square, so `cover` would zoom into open
+               water. Oversizing to 130% and lifting the image 70px keeps the
+               bridge and skyline in frame instead.
+     desktop — the band is a wide letterbox, so `cover` fits and only the
+               vertical anchor matters: 80% sits the horizon high and fills
+               the lower half with reflections.
+
+   Both are plain background-size / background-position, so they can be
+   re-tuned straight from devtools and pasted back here.
 --------------------------------------------------------------------------- */
-:root {
-  --hero-pos: 50% 62%;
-}
-
 .hero-photo {
+  /* Below md. Two files, switched on width, because a background cannot
+     generate its own derivatives the way next/image did — a phone would
+     otherwise download the full desktop image for a 210px-tall band. */
   background-image: url("/assets/jax-river-style-sm.jpg");
-  background-size: cover;
-  background-position: var(--hero-pos);
+  background-size: 130%;
+  background-position: 0px -70px;
   background-repeat: no-repeat;
 }
 
 @media (min-width: 768px) {
   .hero-photo {
     background-image: url("/assets/jax-river-style.jpg");
+    background-size: cover;
+    background-position: 50% 80%;
   }
 }
