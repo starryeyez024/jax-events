@@ -7,10 +7,10 @@ import type { ReactNode } from "react";
 /**
  * Cinematic masthead built on the St. Johns River skyline photo.
  *
- * The source was a 4032px, 1.1MB phone original. next/image was serving a
- * 517KB derivative at 3840 for retina — far too much for a 340px-tall
- * decorative band that is also `priority`, so it blocked LCP on the real
- * content. The file is stored at 2400px instead, which caps what any
+ * The file is stored downscaled and re-encoded rather than as the original.
+ * next/image will otherwise generate a retina derivative at 3840 — far too
+ * much for a decorative band that is also `priority`, so it competes with
+ * the real content for LCP. Capping the stored width caps what any
  * derivative can cost; the scrim and grain hide the difference entirely.
  *
  * Four 2026 trends, chosen because they suit this app rather than to collect
@@ -36,8 +36,8 @@ export function Hero({ actions }: { actions: ReactNode }) {
           never gets so tall it pushes the results below the fold. */}
       <div className="relative h-[210px] sm:h-[250px] lg:h-[290px]">
         <Image
-          src="/assets/jax-night.jpg"
-          alt="The Jacksonville skyline at night, seen across the St. Johns River with the bridge lit up"
+          src="/assets/jax-river-style.jpg"
+          alt="The Jacksonville skyline at night, seen across the St. Johns River with the Acosta Bridge lit up"
           fill
           priority
           quality={70}
