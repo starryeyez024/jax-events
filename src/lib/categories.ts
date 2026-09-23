@@ -50,12 +50,12 @@ export const CATEGORY_GROUPS = [
   {
     label: "Social & community",
     pastel: "lilac",
-    categories: ["festival", "food-drink", "market-shopping", "kids-family", "sports", "business-networking"],
+    categories: ["festival", "food-drink", "market-shopping", "kids-family", "sports"],
   },
   {
     label: "Other",
     pastel: "sage",
-    categories: ["uncategorized", "govt-meeting"],
+    categories: ["uncategorized", "govt-meeting", "business-networking"],
   },
 ] as const;
 

@@ -35,11 +35,15 @@ type SortMode = "match" | "chrono";
 
 const DEFAULT_FILTERS: FilterState = {
   search: "",
-  // Everything except Govt Meetings. Expressed through the existing
-  // three-state model rather than a special case: "Select all" is genuinely
-  // off, because one category genuinely is not selected. Ticking it selects
-  // everything, Govt Meetings included, exactly like any other chip.
-  selectedCategories: CATEGORIES.filter((c) => c !== "govt-meeting"),
+  // Everything except the two opt-in categories in the "Other" group. Both
+  // are real events someone might want, but neither is what anyone opens this
+  // for — committee business and chamber mixers would otherwise dominate a
+  // week's results. Expressed through the existing three-state model rather
+  // than a special case, so ticking "Select all" brings them back exactly
+  // like any other chip.
+  selectedCategories: CATEGORIES.filter(
+    (c) => c !== "govt-meeting" && c !== "business-networking"
+  ),
   allCategories: false,
   // Free + unknown by default: "default to free" per the ask, but without
   // silently hiding the 248 events whose price nobody publishes — that would
