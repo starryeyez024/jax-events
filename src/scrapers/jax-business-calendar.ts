@@ -143,7 +143,7 @@ function toEvent(
     // structured locality is missing often enough to need the fallback.
     city: city ?? cityFromAddress(streetAddress),
     price_min: isFree ? 0 : price,
-    categories: classify(title, description ?? ""),
+    categories: classify(),
   };
 }
 
@@ -153,23 +153,25 @@ function cityFromAddress(a: string | null): string | null {
   return m ? m[1].trim() : null;
 }
 
-function classify(title: string, description: string): Category[] {
-  const t = `${title} ${description}`.toLowerCase();
-  // Everything on this calendar is a business event by definition — that is
-  // what the site is. Tagging it explicitly matters because the alternative
-  // was "intellectual-discussion", which in this taxonomy means philosophy
-  // and book clubs, not a chamber networking breakfast.
-  const cats = new Set<Category>(["business-networking"]);
-
-  if (/\bai\b|artificial intelligence|tech|software|developer|code|data|cyber|crm/.test(t))
-    cats.add("tech-ai-design");
-  if (/workshop|training|class|bootcamp|seminar|masterclass|certification/.test(t))
-    cats.add("learning-workshop");
-  if (/panel|speaker|keynote|talk|fireside|summit|conference|showcase|pitch/.test(t))
-    cats.add("intellectual-discussion");
-  if (/coffee|breakfast|lunch|dinner|brunch|wine|beer/.test(t)) cats.add("food-drink");
-
-  return [...cats];
+function classify(): Category[] {
+  // One category, deliberately.
+  //
+  // Secondary tags looked helpful and were mostly noise: "Coffee & Connect"
+  // became food-drink, "Chamber After Hours" became intellectual-discussion,
+  // "Dine Around" became both. Each of those is a networking event first and
+  // only incidentally about coffee or discussion.
+  //
+  // It also broke the filter. The category filter shows an event if ANY of
+  // its categories is selected, so unchecking "Business & Networking" still
+  // left 81 of 134 business events on screen, matched by tags they should
+  // never have had. A chip that does not filter is worse than a missing
+  // secondary tag.
+  //
+  // The cost is real and worth naming: a genuine tech meetup from this feed
+  // no longer carries tech-ai-design, so it neither shows under that chip nor
+  // earns that preference weight. Everything here is a business event, so
+  // they are all reachable under the one chip.
+  return ["business-networking"];
 }
 
 // ----- small helpers -----
