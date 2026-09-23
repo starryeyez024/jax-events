@@ -3,6 +3,7 @@ import path from "node:path";
 import fs from "node:fs";
 import { CATEGORIES, DEFAULT_WEIGHTS, type Category } from "./categories";
 import { metaForSource, type SourceStatus } from "./sources";
+import { MIN_SOURCES } from "./coverage";
 import { isProceduralMeeting } from "./non-events";
 import type { DistanceBucket } from "./distance";
 
@@ -311,6 +312,32 @@ export function upsertEvent(db: Database.Database, e: EventInput): string {
   for (const c of cats) insCat.run(id, c);
 
   return id;
+}
+
+/**
+ * Last day at least MIN_SOURCES sources have an event, as YYYY-MM-DD.
+ *
+ * Mirrors coverageThrough() in coverage.ts, which answers the same question
+ * over the static snapshot. Computed over ALL upcoming events rather than the
+ * caller's filtered set — it describes what the app knows, not what the
+ * current filters show.
+ */
+export function coverageThrough(db: Database.Database): string | null {
+  const row = db
+    .prepare(
+      `SELECT day FROM (
+         SELECT date(starts_at, 'localtime') AS day,
+                count(DISTINCT source)       AS sources
+         FROM events
+         WHERE starts_at >= datetime('now')
+         GROUP BY day
+       )
+       WHERE sources >= ?
+       ORDER BY day DESC
+       LIMIT 1`
+    )
+    .get(MIN_SOURCES) as { day: string } | undefined;
+  return row?.day ?? null;
 }
 
 // ----- Source run tracking (feeds the /sources transparency page) -----

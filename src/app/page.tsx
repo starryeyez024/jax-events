@@ -14,6 +14,7 @@ import { Hero } from "@/components/Hero";
 import { READ_ONLY } from "@/lib/config";
 import { filterEvents } from "@/lib/filter-events";
 import { decodeViewState, encodeViewState, type Defaults } from "@/lib/url-state";
+import { coverageThrough, formatCoverage, MIN_SOURCES } from "@/lib/coverage";
 
 function todayIso(): string {
   const d = new Date();
@@ -186,6 +187,8 @@ export default function Home() {
     return n;
   }, [filters]);
   const [events, setEvents] = useState<EventWithExtras[]>([]);
+  // How far the DATA reaches, independent of the current filters.
+  const [coverage, setCoverage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [refreshReport, setRefreshReport] = useState<string | null>(null);
@@ -206,7 +209,11 @@ export default function Home() {
     // event times that fall in the early-AM UTC / late-PM Eastern window.
     if (filters.from) sp.set("from", filters.from);
     if (filters.to) sp.set("to", filters.to);
-    for (const b of filters.priceBands) sp.append("price", b);
+    // An empty band list means "show nothing", which an absent param cannot
+    // express — the same three-state problem categories solve with
+    // noCategories=1.
+    if (filters.priceBands.length === 0) sp.set("noPrice", "1");
+    else for (const b of filters.priceBands) sp.append("price", b);
     if (!filters.includeRecurring) sp.set("includeRecurring", "0");
     if (!filters.includeMonthly) sp.set("includeMonthly", "0");
     if (filters.hideUninterested) sp.set("hideUninterested", "1");
@@ -232,10 +239,14 @@ export default function Home() {
       // narrow it in the browser (mirrors the server filters).
       const res = await fetch("/events.json");
       const json = await res.json();
-      setEvents(filterEvents(json.events ?? [], filters));
+      const all = json.events ?? [];
+      // Computed from the whole snapshot, before filtering.
+      setCoverage(coverageThrough(all));
+      setEvents(filterEvents(all, filters));
     } else {
       const res = await fetch(`/api/events?${query}`);
       const json = await res.json();
+      setCoverage(json.coverage_through ?? null);
       setEvents(json.events ?? []);
     }
     setLoading(false);
@@ -358,6 +369,18 @@ export default function Home() {
                     {events.length}{" "}
                     <span className="text-slate-400 text-xl font-normal">
                       event{events.length === 1 ? "" : "s"}
+                      {/* Says how far the DATA reaches, not how far the current
+                          filters reach. Anything past this date is mostly the
+                          big venues — not because the city goes quiet, but
+                          because the smaller calendars have not posted yet. */}
+                      {formatCoverage(coverage) && (
+                        <span
+                          className="hidden sm:inline text-base"
+                          title={`At least ${MIN_SOURCES} sources are still publishing events up to this date. Beyond it, listings come mainly from large venues.`}
+                        >
+                          {" "}· listings through {formatCoverage(coverage)}
+                        </span>
+                      )}
                     </span>
                   </>
                 )}
