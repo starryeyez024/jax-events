@@ -143,7 +143,7 @@ function toEvent(
     // structured locality is missing often enough to need the fallback.
     city: city ?? cityFromAddress(streetAddress),
     price_min: isFree ? 0 : price,
-    categories: classify(),
+    categories: classify(title),
   };
 }
 
@@ -153,24 +153,45 @@ function cityFromAddress(a: string | null): string | null {
   return m ? m[1].trim() : null;
 }
 
-function classify(): Category[] {
-  // One category, deliberately.
+function classify(title: string): Category[] {
+  // Exactly one category, chosen by what the event IS.
   //
-  // Secondary tags looked helpful and were mostly noise: "Coffee & Connect"
-  // became food-drink, "Chamber After Hours" became intellectual-discussion,
-  // "Dine Around" became both. Each of those is a networking event first and
-  // only incidentally about coffee or discussion.
+  // Two earlier attempts were both wrong. Piling on secondary tags made
+  // "Coffee & Connect" a food-drink event and broke the filter, because the
+  // category filter shows an event if ANY of its categories is selected — so
+  // unchecking "Business & Networking" left most business events on screen.
+  // Collapsing everything to business-networking fixed that but buried real
+  // tech talks: "Testing AI Generated Code" stopped appearing under Tech/AI
+  // at all.
   //
-  // It also broke the filter. The category filter shows an event if ANY of
-  // its categories is selected, so unchecking "Business & Networking" still
-  // left 81 of 134 business events on screen, matched by tags they should
-  // never have had. A chip that does not filter is worse than a missing
-  // secondary tag.
-  //
-  // The cost is real and worth naming: a genuine tech meetup from this feed
-  // no longer carries tech-ai-design, so it neither shows under that chip nor
-  // earns that preference weight. Everything here is a business event, so
-  // they are all reachable under the one chip.
+  // Both failures came from classifying by SOURCE rather than by content. A
+  // tech talk listed on a business calendar is a tech event; a chamber mixer
+  // is not. One category, most specific wins, so the filter stays predictable
+  // in both directions: uncheck Business and the mixers go, select Tech and
+  // the AI talks appear.
+  const t = title.toLowerCase();
+
+  // Title only. "data" and "digital" are dropped deliberately: in business
+  // copy they attach to anything ("data-driven growth", a speaker's Chief
+  // Digital Officer title) and were pulling a health luncheon and a marketing
+  // roadmap into Tech/AI.
+  if (
+    /\b(ai|a\.i\.|artificial intelligence|machine learning|llm|chatgpt|cyber\w*|software|developer|saas|technolog\w*|technical|tech|website|no[- ]code|api)\b/.test(t)
+  ) {
+    return ["tech-ai-design"];
+  }
+
+  // Hands-on sessions that are about making something rather than meeting
+  // people — the candle workshop, not the "mastermind" networking group.
+  if (/\b(workshop|bootcamp|class|training|masterclass|hands[- ]on|lab)\b/.test(t)) {
+    return ["learning-workshop"];
+  }
+
+  // No description fallback. Scanning the body for "AI" filed a marketing
+  // roadmap and a medical innovation series under Tech/AI because each
+  // mentioned it once in passing — the same description-matching mistake
+  // already fixed in the Cummer and visit-jax classifiers. An event whose
+  // subject is AI says so in its title.
   return ["business-networking"];
 }
 
