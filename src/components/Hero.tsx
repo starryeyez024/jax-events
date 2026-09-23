@@ -76,7 +76,7 @@ export function Hero({ actions }: { actions: ReactNode }) {
             </p>
             <Link
               href="/sources"
-              className="inline-block mt-1.5 text-[12.8px] text-white/60 hover:text-white underline decoration-white/30 hover:decoration-white/70 underline-offset-4 transition"
+              className="inline-block mt-1.5 text-sm text-white/60 hover:text-white underline decoration-white/30 hover:decoration-white/70 underline-offset-4 transition"
             >
               Where this comes from
             </Link>

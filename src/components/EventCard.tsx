@@ -220,12 +220,12 @@ export function EventCard({ event, onChange, onShowToast }: Props) {
             })()}
             <span className="text-slate-600">{dateStr}</span>
             {event.is_recurring ? (
-              <span className="px-2 py-0.5 rounded-full bg-sand-100 text-slate-500 text-[11px]">
+              <span className="px-2 py-0.5 rounded-full bg-sand-100 text-slate-500 text-xs">
                 Ongoing
               </span>
             ) : null}
             <span
-              className={`px-2 py-0.5 rounded-full text-[11px] ${bucketChip}`}
+              className={`px-2 py-0.5 rounded-full text-xs ${bucketChip}`}
               title={BUCKET_LABELS[event.distance_bucket]}
             >
               {event.distance_bucket === "nearby"
@@ -241,7 +241,7 @@ export function EventCard({ event, onChange, onShowToast }: Props) {
                 useful — hence local-only. */}
             {!READ_ONLY && event.drive_miles != null && (
               <span
-                className="px-2 py-0.5 rounded-full bg-sand-50 text-slate-500 text-[11px]"
+                className="px-2 py-0.5 rounded-full bg-sand-50 text-slate-500 text-xs"
                 title={
                   event.drive_precise
                     ? "Estimated driving distance from Beach Blvd & 3rd St S, Jax Beach"
@@ -321,13 +321,13 @@ export function EventCard({ event, onChange, onShowToast }: Props) {
           {!READ_ONLY && (
             <>
               <div
-                className={`text-[11px] font-medium px-2 py-0.5 rounded-full inline-block ${matchTone}`}
+                className={`text-xs font-medium px-2 py-0.5 rounded-full inline-block ${matchTone}`}
                 title="Match score (0–100+). Higher = better fit. Includes distance penalty."
               >
                 {event.score}
               </div>
               {event.distance_penalty < 0 && (
-                <div className="text-[10px] text-slate-400" title="Distance penalty applied">
+                <div className="text-xs text-slate-400" title="Distance penalty applied">
                   {event.distance_penalty} dist
                 </div>
               )}
@@ -342,7 +342,7 @@ export function EventCard({ event, onChange, onShowToast }: Props) {
           return (
             <span
               key={c}
-              className={`text-[11px] px-2.5 py-0.5 rounded-full border ${PASTEL_CHIP_CARD_CLASSES[pastel]}`}
+              className={`text-xs px-2.5 py-0.5 rounded-full border ${PASTEL_CHIP_CARD_CLASSES[pastel]}`}
             >
               {CATEGORY_LABELS[c]}
             </span>
@@ -366,7 +366,7 @@ export function EventCard({ event, onChange, onShowToast }: Props) {
         const cutAtSource = !/[.!?…"')\]]\s*$/.test(full.trim());
         const shown = descExpanded ? full : truncateForPreview(full, 180);
         return (
-          <div className="text-[12.8px] text-slate-700 mt-2 leading-relaxed">
+          <div className="text-sm text-slate-700 mt-2 leading-relaxed">
             <div className={descExpanded ? "" : "line-clamp-3"}>
               {renderDescription(shown)}
               {/* Both affordances sit inline, directly after the ellipsis

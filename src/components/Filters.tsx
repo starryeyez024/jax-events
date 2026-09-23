@@ -163,7 +163,7 @@ export function Filters({
           </span>
           <span className="sr-only">{collapsed ? "Show filters" : "Hide filters"}</span>
           {collapsed && activeFilterCount > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 grid place-items-center rounded-full bg-ocean-600 text-white text-[10px] font-semibold">
+            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 grid place-items-center rounded-full bg-ocean-600 text-white text-xs font-semibold">
               {activeFilterCount}
             </span>
           )}
@@ -216,7 +216,7 @@ export function Filters({
 
         <div className="grid grid-cols-2 gap-2 text-xs">
           <label className="flex flex-col gap-1">
-            <span className="text-slate-500 font-medium uppercase tracking-wider text-[10px]">From</span>
+            <span className="text-slate-500 font-medium uppercase tracking-wider text-xs">From</span>
             <input
               type="date"
               className="border border-slate-200 rounded-md px-3 py-1.5 bg-sand-50 focus:outline-none focus:bg-white focus:border-slate-300 transition"
@@ -225,7 +225,7 @@ export function Filters({
             />
           </label>
           <label className="flex flex-col gap-1">
-            <span className="text-slate-500 font-medium uppercase tracking-wider text-[10px]">To</span>
+            <span className="text-slate-500 font-medium uppercase tracking-wider text-xs">To</span>
             <input
               type="date"
               className="border border-slate-200 rounded-md px-3 py-1.5 bg-sand-50 focus:outline-none focus:bg-white focus:border-slate-300 transition"
@@ -266,7 +266,7 @@ export function Filters({
         {!READ_ONLY && (
           <div className="text-xs">
             <div className="flex justify-between items-center mb-1.5">
-              <span className="text-slate-500 font-medium uppercase tracking-wider text-[10px]">Driving radius</span>
+              <span className="text-slate-500 font-medium uppercase tracking-wider text-xs">Driving radius</span>
               <span className="font-medium text-slate-700" title={BUCKET_LABELS[value.maxDistance]}>
                 {BUCKET_SHORT[value.maxDistance]}
               </span>
@@ -289,7 +289,7 @@ export function Filters({
                 <option key={i} value={i} />
               ))}
             </datalist>
-            <div className="flex justify-between mt-1 text-[10px] text-slate-400">
+            <div className="flex justify-between mt-1 text-xs text-slate-400">
               {BUCKET_ORDER.map((b) => (
                 <button
                   key={b}
@@ -308,7 +308,7 @@ export function Filters({
 
         <div>
           <div className="flex items-baseline justify-between mb-2">
-            <span className="text-slate-500 font-medium uppercase tracking-wider text-[10px]">Price</span>
+            <span className="text-slate-500 font-medium uppercase tracking-wider text-xs">Price</span>
           </div>
           <div className="flex flex-wrap gap-1.5">
             {PRICE_BANDS.map((b) => {
@@ -365,7 +365,7 @@ export function Filters({
               <div key={group.label}>
                 <button
                   onClick={() => toggleGroup(group.categories as readonly Category[])}
-                  className="text-[10px] uppercase tracking-wider font-bold text-slate-500 hover:text-slate-900 mb-1.5 cursor-pointer block text-left transition"
+                  className="text-xs uppercase tracking-wider font-bold text-slate-500 hover:text-slate-900 mb-1.5 cursor-pointer block text-left transition"
                   title={`Toggle all ${group.label.toLowerCase()} chips`}
                 >
                   {group.label}
@@ -380,7 +380,7 @@ export function Filters({
                       <button
                         key={c}
                         onClick={() => toggleCat(c as Category)}
-                        className={`text-[11px] px-2.5 py-0.5 rounded-full border border-transparent transition ${cls}`}
+                        className={`text-xs px-2.5 py-0.5 rounded-full border border-transparent transition ${cls}`}
                       >
                         {CATEGORY_LABELS[c as Category]}
                       </button>

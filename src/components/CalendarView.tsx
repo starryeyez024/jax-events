@@ -304,11 +304,11 @@ function WeekEventRow({ event }: { event: EventWithExtras }) {
       });
   const statusBadge =
     event.registered === 1 ? (
-      <span className="shrink-0 text-[10px] px-1 py-0.5 rounded bg-violet-100 text-violet-800">
+      <span className="shrink-0 text-xs px-1 py-0.5 rounded bg-violet-100 text-violet-800">
         📅 Registered
       </span>
     ) : event.interest === 1 ? (
-      <span className="shrink-0 text-[10px] px-1 py-0.5 rounded bg-emerald-100 text-emerald-800">
+      <span className="shrink-0 text-xs px-1 py-0.5 rounded bg-emerald-100 text-emerald-800">
         ✓ Interested
       </span>
     ) : null;

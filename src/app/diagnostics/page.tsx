@@ -40,7 +40,7 @@ export default function DiagnosticsPage() {
       <header className="mb-8">
         <Link
           href="/"
-          className="text-[12.8px] font-medium text-slate-500 hover:text-slate-900 transition"
+          className="text-sm font-medium text-slate-500 hover:text-slate-900 transition"
         >
           ← Back to events
         </Link>
@@ -79,17 +79,17 @@ export default function DiagnosticsPage() {
                 className="rounded-md border border-rose-200 bg-rose-50/60 p-3"
               >
                 <div className="flex flex-wrap items-baseline justify-between gap-x-4">
-                  <code className="font-mono text-[13px] font-semibold text-slate-900">
+                  <code className="font-mono text-sm font-semibold text-slate-900">
                     {s.source}
                   </code>
-                  <span className="text-[12.8px] text-slate-500">
+                  <span className="text-sm text-slate-500">
                     ran {relative(s.last_run_at)}
                   </span>
                 </div>
-                <p className="text-[12.8px] text-rose-700 mt-1 font-medium">
+                <p className="text-sm text-rose-700 mt-1 font-medium">
                   {s.last_error}
                 </p>
-                <p className="text-[12.8px] text-slate-500 mt-1">
+                <p className="text-sm text-slate-500 mt-1">
                   {s.upcoming} stale event{s.upcoming === 1 ? "" : "s"} still in the app
                   {" · "}
                   {s.last_ok_at
@@ -108,7 +108,7 @@ export default function DiagnosticsPage() {
             Healthy ({ok.length})
           </h2>
           <div className="overflow-x-auto rounded-md border border-slate-200 bg-white/70 backdrop-blur">
-            <table className="w-full text-[13px]">
+            <table className="w-full text-sm">
               <thead className="text-left text-slate-500 border-b border-slate-200">
                 <tr>
                   <Th>source</Th>

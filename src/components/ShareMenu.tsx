@@ -59,7 +59,7 @@ export function ShareMenu({ getShareUrl, showIcsExport, onDark }: Props) {
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className={`px-4 py-2 text-[12.8px] font-medium rounded-full border backdrop-blur-md transition ${
+        className={`px-4 py-2 text-sm font-medium rounded-full border backdrop-blur-md transition ${
           onDark
             ? "border-white/25 bg-white/10 text-white hover:bg-white/20 hover:border-white/40"
             : "border-slate-200 bg-white/70 hover:bg-white hover:border-slate-300"
@@ -130,8 +130,8 @@ function MenuItem({
         active ? "bg-ocean-50 text-ocean-800" : "hover:bg-slate-50"
       }`}
     >
-      <div className="text-[13px] font-medium text-slate-900">{label}</div>
-      <div className="text-[11.5px] text-slate-500 mt-0.5 leading-snug">{hint}</div>
+      <div className="text-sm font-medium text-slate-900">{label}</div>
+      <div className="text-xs text-slate-500 mt-0.5 leading-snug">{hint}</div>
     </button>
   );
 }

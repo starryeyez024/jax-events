@@ -29,7 +29,7 @@ function plusDaysIso(n: number): string {
 // Frosted glass over the photo: 2026's refined glassmorphism, and it keeps
 // the controls legible over whatever part of the skyline sits behind them.
 const HERO_BTN =
-  "px-4 py-2 text-[12.8px] font-medium rounded-full border border-white/25 bg-white/10 text-white backdrop-blur-md hover:bg-white/20 hover:border-white/40 transition";
+  "px-4 py-2 text-sm font-medium rounded-full border border-white/25 bg-white/10 text-white backdrop-blur-md hover:bg-white/20 hover:border-white/40 transition";
 
 type SortMode = "match" | "chrono";
 
@@ -428,7 +428,7 @@ function SegmentedToggle({
   onChange: (v: string) => void;
 }) {
   return (
-    <div className="inline-flex items-center rounded-full border border-slate-200 bg-white/70 backdrop-blur p-1 text-[12.8px] font-medium">
+    <div className="inline-flex items-center rounded-full border border-slate-200 bg-white/70 backdrop-blur p-1 text-sm font-medium">
       {options.map((o) => {
         const active = o.value === value;
         return (

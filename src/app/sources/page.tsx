@@ -41,7 +41,7 @@ export default function SourcesPage() {
       <header className="mb-8">
         <Link
           href="/"
-          className="text-[12.8px] font-medium text-slate-500 hover:text-slate-900 transition"
+          className="text-sm font-medium text-slate-500 hover:text-slate-900 transition"
         >
           ← Back to events
         </Link>
@@ -113,7 +113,7 @@ function SourceRow({ s }: { s: SourceStatus }) {
             s.label
           )}
         </h2>
-        <span className="text-[12.8px] text-slate-500">
+        <span className="text-sm text-slate-500">
           {s.kind === "manual"
             ? "entered by hand"
             : s.last_updated
@@ -141,7 +141,7 @@ function SourceRow({ s }: { s: SourceStatus }) {
 
 function Pill({ children }: { children: React.ReactNode }) {
   return (
-    <span className="px-3 py-1 rounded-full text-[12.8px] font-medium bg-slate-100 text-slate-700 border border-slate-200">
+    <span className="px-3 py-1 rounded-full text-sm font-medium bg-slate-100 text-slate-700 border border-slate-200">
       {children}
     </span>
   );
