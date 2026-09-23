@@ -369,36 +369,41 @@ export function EventCard({ event, onChange, onShowToast }: Props) {
           <div className="text-[12.8px] text-slate-700 mt-2 leading-relaxed">
             <div className={descExpanded ? "" : "line-clamp-3"}>
               {renderDescription(shown)}
-              {/* Ellipsis and link sit inline, in the flow of the sentence
-                  they interrupt — the feed's cut leaves no ellipsis behind,
-                  so the text otherwise just stops dead. Kept inside the
-                  clamped block so the link lands on the last visible line
-                  rather than floating under the paragraph. */}
-              {cutAtSource && (
+              {/* Both affordances sit inline, directly after the ellipsis
+                  they explain, so a truncated description always ends the
+                  same way regardless of WHY it was cut. "Show more" used to
+                  sit on its own line below, which read as a different kind
+                  of thing from the link beside the ellipsis. */}
+              {hasMoreLocally && (
                 <>
-                  {!/…\s*$/.test(shown) ? "… " : " "}
-                  {event.url && (
-                    <a
-                      href={event.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="whitespace-nowrap text-slate-500 hover:text-ocean-700 underline"
-                      title="The full description is on the event's own page"
-                    >
-                      Read more ↗
-                    </a>
-                  )}
+                  {" "}
+                  <button
+                    onClick={() => setDescExpanded((v) => !v)}
+                    className="whitespace-nowrap text-slate-500 hover:text-ocean-700 underline"
+                  >
+                    {descExpanded ? "Show less" : "Show more"}
+                  </button>
                 </>
               )}
+              {/* The feed's own cut leaves no ellipsis behind, so the text
+                  would otherwise just stop dead. */}
+              {cutAtSource && event.url && (
+                <>
+                  {!/…\s*$/.test(shown) ? "… " : " "}
+                  <a
+                    href={event.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="whitespace-nowrap text-slate-500 hover:text-ocean-700 underline"
+                    title="The full description is on the event's own page"
+                  >
+                    Read more ↗
+                  </a>
+                </>
+              )}
+              {/* Cut at source with nowhere to link: at least end honestly. */}
+              {cutAtSource && !event.url && !/…\s*$/.test(shown) ? "…" : ""}
             </div>
-            {hasMoreLocally && (
-              <button
-                onClick={() => setDescExpanded((s) => !s)}
-                className="text-[11px] text-slate-500 hover:text-ocean-700 underline mt-1"
-              >
-                {descExpanded ? "Show less" : "Show more"}
-              </button>
-            )}
           </div>
         );
       })()}
