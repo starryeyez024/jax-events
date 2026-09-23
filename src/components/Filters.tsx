@@ -45,6 +45,14 @@ type Props = {
   onToggle: () => void;
   /** Shown on the rail so a narrowed list is still explained while hidden. */
   activeFilterCount: number;
+  /**
+   * True until the mount effect has chosen a collapse state. The server has
+   * no viewport, so it renders the panel open — which on a phone flashes a
+   * full screen of filters before collapsing. During that window the body
+   * follows the responsive default in CSS instead, which is exactly what the
+   * effect is about to decide anyway.
+   */
+  preHydration?: boolean;
 };
 
 export function Filters({
@@ -53,6 +61,7 @@ export function Filters({
   collapsed,
   onToggle,
   activeFilterCount,
+  preHydration = false,
 }: Props) {
   const allOn = value.allCategories;
 
@@ -176,7 +185,16 @@ export function Filters({
           </h2>
         )}
       </div>
-      <div id="filter-body" className={collapsed ? "hidden" : "space-y-5"}>
+      <div
+        id="filter-body"
+        className={
+          preHydration
+            ? "hidden md:block space-y-5"
+            : collapsed
+              ? "hidden"
+              : "space-y-5"
+        }
+      >
 
         <input
           className="w-full px-4 py-2 border border-slate-200 rounded-full text-sm bg-sand-50 focus:outline-none focus:bg-white focus:border-slate-300 transition placeholder:text-slate-400"

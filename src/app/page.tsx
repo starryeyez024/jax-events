@@ -78,17 +78,30 @@ export default function Home() {
   const [hydrated, setHydrated] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  // Restore the collapse preference after mount, but only in the personalized
-  // build. On the public site this was surprising: one visitor collapsing the
-  // panel once left it collapsed on every later visit, with nothing on screen
-  // explaining why the filters had vanished. A public page should open in a
-  // known state. (Reading localStorage during render would also desync server
-  // and client markup and trip hydration, hence the effect.)
+  // Decide the panel's opening state after mount.
+  //
+  // On phones the panel is a full-width accordion stacked above the results,
+  // so opening it expanded meant the whole first screen was filters and not a
+  // single event — the opposite of what the page is for. It therefore starts
+  // collapsed below the md breakpoint, where it is a compact "Filters" bar,
+  // and expanded above it, where it sits in its own column and costs the
+  // results nothing.
+  //
+  // An explicit choice still wins over the width default, but only in the
+  // personalized build: on the public site persisting it was surprising, as
+  // one visitor collapsing the panel once left it collapsed on every later
+  // visit with nothing on screen explaining where the filters went.
+  //
+  // All of this runs in an effect rather than during render — reading
+  // localStorage or matchMedia while rendering would desync server and client
+  // markup and trip hydration.
   useEffect(() => {
-    if (READ_ONLY) return;
-    if (window.localStorage.getItem("wavelength:filters-collapsed") === "1") {
-      setSidebarOpen(false);
-    }
+    const stored = READ_ONLY
+      ? null
+      : window.localStorage.getItem("wavelength:filters-collapsed");
+    if (stored === "1") return setSidebarOpen(false);
+    if (stored === "0") return setSidebarOpen(true);
+    setSidebarOpen(window.matchMedia("(min-width: 768px)").matches);
   }, []);
 
   function toggleSidebar() {
@@ -327,6 +340,7 @@ export default function Home() {
               collapsed={!sidebarOpen}
               onToggle={toggleSidebar}
               activeFilterCount={activeFilterCount}
+              preHydration={!hydrated}
             />
           </div>
         </aside>
