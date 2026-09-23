@@ -49,3 +49,32 @@ body {
   from { transform: scale(1.08); }
   to   { transform: scale(1); }
 }
+
+/* ---------------------------------------------------------------------------
+   Hero photograph.
+
+   A CSS background rather than an <img>, so the crop is tunable from one
+   place: change --hero-pos below and the framing moves. The value is a
+   standard background-position — first number is horizontal, second vertical,
+   so 50% 62% sits the skyline just below centre.
+
+   Two files, switched on width, because a background cannot generate its own
+   derivatives the way next/image did: a phone would otherwise download the
+   full desktop image for a 210px-tall band.
+--------------------------------------------------------------------------- */
+:root {
+  --hero-pos: 50% 62%;
+}
+
+.hero-photo {
+  background-image: url("/assets/jax-river-style-sm.jpg");
+  background-size: cover;
+  background-position: var(--hero-pos);
+  background-repeat: no-repeat;
+}
+
+@media (min-width: 768px) {
+  .hero-photo {
+    background-image: url("/assets/jax-river-style.jpg");
+  }
+}

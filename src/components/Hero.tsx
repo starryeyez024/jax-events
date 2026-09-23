@@ -1,7 +1,5 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
 import type { ReactNode } from "react";
 
 /**
@@ -31,20 +29,20 @@ import type { ReactNode } from "react";
  */
 export function Hero({ actions }: { actions: ReactNode }) {
   return (
-    <header className="relative isolate overflow-hidden">
+    <header
+      className="relative isolate overflow-hidden"
+      role="img"
+      aria-label="The Jacksonville skyline at night, seen across the St. Johns River with the Acosta Bridge lit up"
+    >
       {/* Fixed aspect on small screens, capped height on large, so the skyline
           never gets so tall it pushes the results below the fold. */}
       <div className="relative h-[210px] sm:h-[250px] lg:h-[290px]">
-        <Image
-          src="/assets/jax-river-style.jpg"
-          alt="The Jacksonville skyline at night, seen across the St. Johns River with the Acosta Bridge lit up"
-          fill
-          priority
-          quality={70}
-          sizes="100vw"
-          // The skyline sits about two-thirds down the frame; anchoring there
-          // keeps the city on screen when the band is cropped short.
-          className="object-cover object-[50%_62%] motion-safe:animate-[heroDrift_28s_ease-out_forwards]"
+        {/* The photo is a CSS background (see .hero-photo in globals.css),
+            not an <img>, so its framing is one value — --hero-pos — rather
+            than an object-position buried in this file. */}
+        <div
+          aria-hidden
+          className="absolute inset-0 hero-photo motion-safe:animate-[heroDrift_28s_ease-out_forwards]"
         />
 
         {/* Graded scrim, kept as light as the type allows. It exists only to
@@ -78,12 +76,6 @@ export function Hero({ actions }: { actions: ReactNode }) {
             <p className="mt-2 text-white/90 font-medium text-sm sm:text-base max-w-xl drop-shadow-[0_1px_6px_rgba(0,0,0,0.7)]">
               Events on your wavelength · Jacksonville, FL
             </p>
-            <Link
-              href="/sources"
-              className="inline-block mt-1.5 text-sm text-white/60 hover:text-white underline decoration-white/30 hover:decoration-white/70 underline-offset-4 transition"
-            >
-              Where this comes from
-            </Link>
           </div>
         </div>
       </div>
