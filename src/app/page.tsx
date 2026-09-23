@@ -378,7 +378,7 @@ export default function Home() {
                           className="hidden sm:inline text-base"
                           title={`At least ${MIN_SOURCES} sources are still publishing events up to this date. Beyond it, listings come mainly from large venues.`}
                         >
-                          {" "}· listings through {formatCoverage(coverage)}
+                          {" "}· most sources go to {formatCoverage(coverage)}
                         </span>
                       )}
                     </span>
