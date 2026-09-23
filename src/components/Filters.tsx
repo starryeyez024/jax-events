@@ -322,8 +322,13 @@ export function Filters({
             </div>
             <FilterCheckbox
               checked={allOn}
+              indeterminate={!allOn && value.selectedCategories.length > 0}
               onChange={(b) => toggleAll(b)}
-              label="Select all"
+              label={
+                allOn || value.selectedCategories.length === 0
+                  ? "Select all"
+                  : `Select all (${value.selectedCategories.length}/${CATEGORIES.length})`
+              }
             />
           </div>
           <div className="space-y-3">
@@ -368,29 +373,51 @@ function FilterCheckbox({
   checked,
   onChange,
   label,
+  /**
+   * Some-but-not-all. A plain checkbox has no way to say this, so "Select
+   * all" rendered as empty when 31 of 32 categories were on — it read as
+   * "nothing is selected" when very nearly everything was, and the single
+   * deselected chip sits in the last group, off screen.
+   */
+  indeterminate = false,
 }: {
   checked: boolean;
   onChange: (next: boolean) => void;
   label: string;
+  indeterminate?: boolean;
 }) {
+  const filled = checked || indeterminate;
   return (
     <label className="flex items-center gap-2 cursor-pointer select-none">
       <span
+        role="checkbox"
+        aria-checked={indeterminate ? "mixed" : checked}
+        tabIndex={0}
         onClick={() => onChange(!checked)}
+        onKeyDown={(e) => {
+          if (e.key === " " || e.key === "Enter") {
+            e.preventDefault();
+            onChange(!checked);
+          }
+        }}
         className={`inline-flex items-center justify-center w-4 h-4 rounded border transition ${
-          checked
+          filled
             ? "bg-slate-900 border-slate-900 text-white"
             : "bg-white border-slate-300 hover:border-slate-500"
         }`}
       >
-        {checked && (
+        {filled && (
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 12 12"
             className="w-3 h-3 fill-current"
             aria-hidden
           >
-            <path d="M4.5 8.7 2.3 6.5l-.9.9 3.1 3.1L11.6 4 10.7 3z" />
+            {indeterminate && !checked ? (
+              <rect x="2.5" y="5.2" width="7" height="1.6" rx="0.8" />
+            ) : (
+              <path d="M4.5 8.7 2.3 6.5l-.9.9 3.1 3.1L11.6 4 10.7 3z" />
+            )}
           </svg>
         )}
       </span>
