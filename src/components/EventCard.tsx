@@ -350,25 +350,53 @@ export function EventCard({ event, onChange, onShowToast }: Props) {
         })}
       </div>
 
-      {event.description && (
-        <div className="text-[12.8px] text-slate-700 mt-2 leading-relaxed">
-          <div className={descExpanded ? "" : "line-clamp-3"}>
-            {renderDescription(
-              descExpanded
-                ? event.description
-                : truncateForPreview(event.description, 180)
-            )}
+      {event.description && (() => {
+        // Two different kinds of "there's more", which need different offers.
+        //
+        // hasMoreLocally: we hold the full text and only shortened it for the
+        // card, so it can be expanded in place.
+        //
+        // cutAtSource: the feed itself handed us a fragment. visit-jax's
+        // JSON-LD carries a ~155-character summary, so 361 descriptions end
+        // mid-sentence — "…an East German transgender woman who lived". No
+        // amount of expanding recovers that; the rest only exists on the
+        // event's own page, so the offer has to be a link out.
+        const full = event.description!;
+        const hasMoreLocally = full.length > 180;
+        const cutAtSource = !/[.!?…"')\]]\s*$/.test(full.trim());
+        const shown = descExpanded ? full : truncateForPreview(full, 180);
+        return (
+          <div className="text-[12.8px] text-slate-700 mt-2 leading-relaxed">
+            <div className={descExpanded ? "" : "line-clamp-3"}>
+              {renderDescription(shown)}
+              {/* The feed's own cut leaves no ellipsis behind, so the text
+                  simply stopped dead. Add one so it reads as continuing. */}
+              {cutAtSource && !/…\s*$/.test(shown) ? "…" : ""}
+            </div>
+            <div className="flex items-center gap-3 mt-1">
+              {hasMoreLocally && (
+                <button
+                  onClick={() => setDescExpanded((s) => !s)}
+                  className="text-[11px] text-slate-500 hover:text-ocean-700 underline"
+                >
+                  {descExpanded ? "Show less" : "Show more"}
+                </button>
+              )}
+              {cutAtSource && event.url && (
+                <a
+                  href={event.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[11px] text-slate-500 hover:text-ocean-700 underline"
+                  title="The full description is on the event's own page"
+                >
+                  Read more ↗
+                </a>
+              )}
+            </div>
           </div>
-          {event.description.length > 180 && (
-            <button
-              onClick={() => setDescExpanded((s) => !s)}
-              className="text-[11px] text-slate-500 hover:text-ocean-700 mt-1 underline"
-            >
-              {descExpanded ? "Show less" : "Show more"}
-            </button>
-          )}
-        </div>
-      )}
+        );
+      })()}
 
       {!READ_ONLY && (
       <div className="flex items-center gap-1.5 mt-4 text-sm flex-wrap">
