@@ -70,6 +70,7 @@ const DOW: Record<string, number> = {
 const DOW_ABBREV: Record<string, number> = { M: 1, W: 3, F: 5 };
 
 export async function fetchKavaAndCompany(): Promise<EventInput[]> {
+  const skipped: string[] = [];
   const res = await fetch(PAGE_URL, {
     headers: { "user-agent": "Mozilla/5.0 (jax-events local scraper)" },
   });
@@ -103,24 +104,19 @@ export async function fetchKavaAndCompany(): Promise<EventInput[]> {
 
     const rule = parseRecurrence(dayRaw, title);
 
-    // Unanchored biweekly ("EVERY OTHER MON") can't be resolved to real dates
-    // from this page — there's no reference week anywhere in the markup.
-    // Rather than inventing dates or dropping the event, emit it once as an
-    // evergreen entry so it can still surface as a standing suggestion.
+    // Unanchored biweekly ("EVERY OTHER MON") is skipped.
+    //
+    // The page gives the cadence but never a reference week, so there is no
+    // way to know which Mondays it lands on. This used to be emitted as a
+    // single evergreen entry dated "next Monday" with a confirm-before-going
+    // note, which was worse than nothing: the date is part of the source_id,
+    // so every weekly scrape minted a NEW row instead of updating the old
+    // one, and the same event stacked up four times in the list.
+    //
+    // Skipped events are counted and logged rather than silently dropped, so
+    // a scraper quietly discarding real events stays visible.
     if (rule.kind === "unresolved") {
-      const next = nextWeekday(new Date(), rule.weekdays[0] ?? 1);
-      out.push(
-        build({
-          title,
-          description: prefixCaveat(description, dayRaw),
-          link,
-          venue,
-          date: next,
-          startMin,
-          endMin,
-          isRecurring: true,
-        })
-      );
+      skipped.push(title);
       return;
     }
 
@@ -130,6 +126,12 @@ export async function fetchKavaAndCompany(): Promise<EventInput[]> {
       );
     }
   });
+
+  if (skipped.length) {
+    console.log(
+      `  kava-and-company   skipped ${skipped.length} unanchored recurrence(s): ${skipped.join(", ")}`
+    );
+  }
 
   return out;
 }
