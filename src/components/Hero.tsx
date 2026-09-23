@@ -34,7 +34,7 @@ export function Hero({ actions }: { actions: ReactNode }) {
     <header className="relative isolate overflow-hidden">
       {/* Fixed aspect on small screens, capped height on large, so the skyline
           never gets so tall it pushes the results below the fold. */}
-      <div className="relative h-[260px] sm:h-[300px] lg:h-[340px]">
+      <div className="relative h-[210px] sm:h-[250px] lg:h-[290px]">
         <Image
           src="/assets/jax-night.jpg"
           alt="The Jacksonville skyline at night, seen across the St. Johns River with the bridge lit up"
@@ -62,21 +62,21 @@ export function Hero({ actions }: { actions: ReactNode }) {
         <div aria-hidden className="absolute inset-0 opacity-[0.10] mix-blend-overlay hero-grain" />
 
         <div className="relative h-full max-w-7xl mx-auto px-4 md:px-8 flex flex-col">
-          <div className="flex justify-end pt-4 md:pt-6">{actions}</div>
+          <div className="flex justify-end pt-3 md:pt-4">{actions}</div>
 
-          <div className="mt-auto pb-6 md:pb-8">
+          <div className="mt-auto pb-5 md:pb-6">
             {/* A serif at this weight needs more size and looser tracking than
                 the chunky face it replaced to hold the same presence. */}
             <h1 className="font-title text-white leading-[0.85] tracking-[-0.015em] text-[3.25rem] sm:text-7xl lg:text-8xl drop-shadow-[0_2px_28px_rgba(0,0,0,0.5)]">
               <span aria-hidden className="mr-2 md:mr-3">🏄</span>
               Wavelength
             </h1>
-            <p className="mt-3 text-white/85 font-medium text-sm sm:text-base max-w-xl">
+            <p className="mt-2 text-white/85 font-medium text-sm sm:text-base max-w-xl">
               Events on your wavelength · Jacksonville, FL
             </p>
             <Link
               href="/sources"
-              className="inline-block mt-2 text-[12.8px] text-white/60 hover:text-white underline decoration-white/30 hover:decoration-white/70 underline-offset-4 transition"
+              className="inline-block mt-1.5 text-[12.8px] text-white/60 hover:text-white underline decoration-white/30 hover:decoration-white/70 underline-offset-4 transition"
             >
               Where this comes from
             </Link>

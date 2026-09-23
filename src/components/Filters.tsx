@@ -127,8 +127,12 @@ export function Filters({
 
   return (
     <div
-      className={`bg-white rounded-lg border border-slate-200 space-y-5 p-5 ${
-        collapsed ? "md:p-2" : ""
+      // Collapsed on mobile this is just a tap target, so it drops to a 50px
+      // bar: 36px chevron + 6px padding top and bottom + 1px borders. Only the
+      // vertical padding changes — horizontal stays at 20px so the chevron
+      // does not shift sideways when the panel opens.
+      className={`bg-white rounded-lg border border-slate-200 space-y-5 ${
+        collapsed ? "px-5 py-1.5 md:p-2" : "p-5"
       }`}
     >
       {/* The trigger is anchored to the LEFT edge of the card, which is the
