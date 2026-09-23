@@ -127,12 +127,14 @@ export function Filters({
 
   return (
     <div
-      // Collapsed on mobile this is just a tap target, so it drops to a 50px
-      // bar: 36px chevron + 6px padding top and bottom + 1px borders. Only the
-      // vertical padding changes — horizontal stays at 20px so the chevron
-      // does not shift sideways when the panel opens.
-      className={`bg-white rounded-lg border border-slate-200 space-y-5 ${
-        collapsed ? "px-5 py-1.5 md:p-2" : "p-5"
+      // Top and side padding are identical in both states, so the chevron and
+      // the word "Filters" sit at exactly the same point whether the panel is
+      // open or shut — opening it grows the card downward instead of nudging
+      // its header. Only the bottom padding differs, which with space-y-5
+      // gives the body its gap. Collapsed on mobile that yields a 50px bar:
+      // 36px chevron + 6px above and below + 1px borders.
+      className={`bg-white rounded-lg border border-slate-200 space-y-5 px-5 pt-1.5 ${
+        collapsed ? "pb-1.5 md:p-2" : "pb-5"
       }`}
     >
       {/* The trigger is anchored to the LEFT edge of the card, which is the
@@ -170,8 +172,13 @@ export function Filters({
             Horizontal whenever there is width for it: always when open, and
             on mobile even when collapsed, where the panel is a full-width
             accordion rather than a rail. */}
+        {/* Clicking the word toggles as well — it is the obvious tap target,
+            and on the 50px mobile bar the 36px chevron alone is a small one.
+            The button above stays the accessible control, so this is a
+            convenience target rather than a second announced element. */}
         <h2
-          className={`font-display text-lg font-semibold text-slate-900 tracking-tight ${
+          onClick={onToggle}
+          className={`font-display text-lg font-semibold text-slate-900 tracking-tight cursor-pointer select-none ${
             collapsed ? "md:hidden" : ""
           }`}
         >
