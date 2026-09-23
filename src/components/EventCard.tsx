@@ -369,31 +369,36 @@ export function EventCard({ event, onChange, onShowToast }: Props) {
           <div className="text-[12.8px] text-slate-700 mt-2 leading-relaxed">
             <div className={descExpanded ? "" : "line-clamp-3"}>
               {renderDescription(shown)}
-              {/* The feed's own cut leaves no ellipsis behind, so the text
-                  simply stopped dead. Add one so it reads as continuing. */}
-              {cutAtSource && !/…\s*$/.test(shown) ? "…" : ""}
-            </div>
-            <div className="flex items-center gap-3 mt-1">
-              {hasMoreLocally && (
-                <button
-                  onClick={() => setDescExpanded((s) => !s)}
-                  className="text-[11px] text-slate-500 hover:text-ocean-700 underline"
-                >
-                  {descExpanded ? "Show less" : "Show more"}
-                </button>
-              )}
-              {cutAtSource && event.url && (
-                <a
-                  href={event.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[11px] text-slate-500 hover:text-ocean-700 underline"
-                  title="The full description is on the event's own page"
-                >
-                  Read more ↗
-                </a>
+              {/* Ellipsis and link sit inline, in the flow of the sentence
+                  they interrupt — the feed's cut leaves no ellipsis behind,
+                  so the text otherwise just stops dead. Kept inside the
+                  clamped block so the link lands on the last visible line
+                  rather than floating under the paragraph. */}
+              {cutAtSource && (
+                <>
+                  {!/…\s*$/.test(shown) ? "… " : " "}
+                  {event.url && (
+                    <a
+                      href={event.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="whitespace-nowrap text-slate-500 hover:text-ocean-700 underline"
+                      title="The full description is on the event's own page"
+                    >
+                      Read more ↗
+                    </a>
+                  )}
+                </>
               )}
             </div>
+            {hasMoreLocally && (
+              <button
+                onClick={() => setDescExpanded((s) => !s)}
+                className="text-[11px] text-slate-500 hover:text-ocean-700 underline mt-1"
+              >
+                {descExpanded ? "Show less" : "Show more"}
+              </button>
+            )}
           </div>
         );
       })()}
