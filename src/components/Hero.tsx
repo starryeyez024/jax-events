@@ -47,19 +47,23 @@ export function Hero({ actions }: { actions: ReactNode }) {
           className="object-cover object-[50%_62%] motion-safe:animate-[heroDrift_28s_ease-out_forwards]"
         />
 
-        {/* Graded scrim. Darkest at the bottom so the wordmark sits on the
-            water rather than fighting the lit buildings. */}
+        {/* Graded scrim, kept as light as the type allows. It exists only to
+            hold the wordmark and the controls, not to mood-light the photo —
+            the earlier values (55/30/82) were tuned for a flatter original
+            and buried most of the water in this one. The wordmark leans on
+            its own drop shadow instead, which darkens the type rather than
+            the picture behind it. */}
         <div
           aria-hidden
-          className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(2,6,23,0.55)_0%,rgba(2,6,23,0.30)_42%,rgba(2,6,23,0.82)_100%)]"
+          className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(2,6,23,0.34)_0%,rgba(2,6,23,0.08)_45%,rgba(2,6,23,0.58)_100%)]"
         />
         {/* Chromatic wash pulled from the photo's own lights. */}
         <div
           aria-hidden
-          className="absolute inset-0 mix-blend-soft-light bg-[radial-gradient(ellipse_60%_80%_at_15%_100%,rgba(13,148,136,0.55),transparent_60%),radial-gradient(ellipse_55%_75%_at_88%_95%,rgba(245,166,35,0.45),transparent_62%)]"
+          className="absolute inset-0 mix-blend-soft-light bg-[radial-gradient(ellipse_60%_80%_at_15%_100%,rgba(13,148,136,0.28),transparent_60%),radial-gradient(ellipse_55%_75%_at_88%_95%,rgba(245,166,35,0.22),transparent_62%)]"
         />
         {/* Grain. */}
-        <div aria-hidden className="absolute inset-0 opacity-[0.10] mix-blend-overlay hero-grain" />
+        <div aria-hidden className="absolute inset-0 opacity-[0.055] mix-blend-overlay hero-grain" />
 
         <div className="relative h-full max-w-7xl mx-auto px-4 md:px-8 flex flex-col">
           <div className="flex justify-end pt-3 md:pt-4">{actions}</div>
@@ -67,11 +71,11 @@ export function Hero({ actions }: { actions: ReactNode }) {
           <div className="mt-auto pb-5 md:pb-6">
             {/* A serif at this weight needs more size and looser tracking than
                 the chunky face it replaced to hold the same presence. */}
-            <h1 className="font-title text-white leading-[0.85] tracking-[-0.015em] text-[3.25rem] sm:text-7xl lg:text-8xl drop-shadow-[0_2px_28px_rgba(0,0,0,0.5)]">
+            <h1 className="font-title text-white leading-[0.85] tracking-[-0.015em] text-[3.25rem] sm:text-7xl lg:text-8xl drop-shadow-[0_2px_10px_rgba(0,0,0,0.75)]">
               <span aria-hidden className="mr-2 md:mr-3">🏄</span>
               Wavelength
             </h1>
-            <p className="mt-2 text-white/85 font-medium text-sm sm:text-base max-w-xl">
+            <p className="mt-2 text-white/90 font-medium text-sm sm:text-base max-w-xl drop-shadow-[0_1px_6px_rgba(0,0,0,0.7)]">
               Events on your wavelength · Jacksonville, FL
             </p>
             <Link
