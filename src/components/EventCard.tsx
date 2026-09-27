@@ -493,7 +493,7 @@ export function EventCard({ event, onChange, onShowToast }: Props) {
 //
 //   one-off → full date + time          ("Tue, May 27, 6:00 PM")
 //   evergreen with ends_at → end date   ("Through Aug 23")
-//   evergreen with no ends_at → blank   (the 📍 Ongoing badge says it all)
+//   evergreen with no ends_at → blank   (the 🌲 Ongoing badge says it all)
 //
 // Showing the start date for a months-long exhibition is misleading — the
 // opening day isn't what the user cares about, when they can visit is.

@@ -54,11 +54,11 @@ export function eventTypeFor(e: EventLike): EventType {
 //              "default" mark; was a 🎉 originally but turned into visual
 //              noise in dense lists like the calendar day view)
 //   monthly  → 🔁 (recurring cadence)
-//   evergreen → 📍 (always-on / ongoing)
+//   evergreen → 🌲 (always-on / ongoing)
 export const TYPE_ICONS: Record<EventType, string> = {
   "one-off": "•",
   monthly: "🔁",
-  evergreen: "📍",
+  evergreen: "🌲",
 };
 
 export const TYPE_LABELS: Record<EventType, string> = {

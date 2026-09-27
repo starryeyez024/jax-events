@@ -242,7 +242,7 @@ export function Filters({
           <FilterCheckbox
             checked={value.includeRecurring}
             onChange={(b) => onChange({ ...value, includeRecurring: b })}
-            label="Include 📍 evergreen"
+            label="Include 🌲 evergreen"
           />
           <FilterCheckbox
             checked={value.includeMonthly}
