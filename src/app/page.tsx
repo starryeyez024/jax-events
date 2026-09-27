@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import type { EventWithExtras } from "@/lib/db";
 import { EventCard } from "@/components/EventCard";
@@ -64,10 +64,13 @@ const DEFAULT_FILTERS: FilterState = {
 export default function Home() {
   // Public read-only mode has no visible match score, so default to a plain
   // chronological list.
-  const defaults: Defaults = useMemo(
-    () => ({ filters: DEFAULT_FILTERS, sort: READ_ONLY ? "chrono" : "match" }),
-    []
-  );
+  // Held in state rather than memoised, because the end date adopts the
+  // coverage date once that is known. Keeping `defaults` in step means the
+  // adopted value still counts as default and stays out of shared URLs.
+  const [defaults, setDefaults] = useState<Defaults>(() => ({
+    filters: DEFAULT_FILTERS,
+    sort: READ_ONLY ? "chrono" : "match",
+  }));
 
   const [view, setView] = useState<"list" | "calendar">("list");
   const [sort, setSort] = useState<SortMode>(defaults.sort);
@@ -78,6 +81,7 @@ export default function Home() {
   // render would immediately overwrite an incoming shared link with defaults.
   const [hydrated, setHydrated] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const toWasExplicit = useRef(false);
 
   // Decide the panel's opening state after mount.
   //
@@ -123,6 +127,8 @@ export default function Home() {
   // useSearchParams keeps this component out of Next's Suspense requirement
   // for static rendering, which the read-only export depends on.
   useEffect(() => {
+    // A link that names its own end date must win over the coverage default.
+    toWasExplicit.current = new URLSearchParams(window.location.search).has("to");
     const { state } = decodeViewState(window.location.search, defaults);
     setFilters(state.filters);
     setView(state.view);
@@ -256,6 +262,17 @@ export default function Home() {
     load();
   }, [query]);
 
+  // Default the window to end where the data does. Runs once coverage is
+  // known, and only while the range is still untouched — a link that pinned
+  // `to`, or a date the user has since edited, is left alone.
+  useEffect(() => {
+    if (!coverage || toWasExplicit.current) return;
+    setDefaults((d) =>
+      d.filters.to === coverage ? d : { ...d, filters: { ...d.filters, to: coverage } }
+    );
+    setFilters((f) => (f.to === DEFAULT_FILTERS.to ? { ...f, to: coverage } : f));
+  }, [coverage]);
+
   async function refreshScrapers() {
     setRefreshing(true);
     setRefreshReport(null);
@@ -369,16 +386,16 @@ export default function Home() {
                     {events.length}{" "}
                     <span className="text-slate-400 text-xl font-normal">
                       event{events.length === 1 ? "" : "s"}
-                      {/* Says how far the DATA reaches, not how far the current
-                          filters reach. Anything past this date is mostly the
-                          big venues — not because the city goes quiet, but
-                          because the smaller calendars have not posted yet. */}
+                      {/* Describes how far the DATA reaches, not the current
+                          filters. Past this date the listings are mostly big
+                          venues — not because the city goes quiet, but because
+                          the smaller calendars have not posted yet. */}
                       {formatCoverage(coverage) && (
                         <span
                           className="hidden sm:inline text-base"
                           title={`At least ${MIN_SOURCES} sources are still publishing events up to this date. Beyond it, listings come mainly from large venues.`}
                         >
-                          {" "}· most sources go to {formatCoverage(coverage)}
+                          , sourced through {formatCoverage(coverage)}. Updated weekly.
                         </span>
                       )}
                     </span>

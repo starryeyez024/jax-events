@@ -44,12 +44,13 @@ export function coverageThrough(events: Dated[], minSources = MIN_SOURCES): stri
   return last;
 }
 
-/** "Nov 17" — short enough to sit beside the result count. */
+/** "Nov 13, 2026" — the year matters because the window can run past it. */
 export function formatCoverage(day: string | null): string | null {
   if (!day) return null;
   const [y, m, d] = day.split("-").map(Number);
   return new Date(y, m - 1, d).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
+    year: "numeric",
   });
 }
