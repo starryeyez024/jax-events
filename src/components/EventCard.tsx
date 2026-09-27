@@ -492,6 +492,7 @@ export function EventCard({ event, onChange, onShowToast }: Props) {
 // What date label belongs at the top of an event card?
 //
 //   one-off → full date + time          ("Tue, May 27, 6:00 PM")
+//   multi-day run already open → end     ("Through Oct 5")
 //   evergreen with ends_at → end date   ("Through Aug 23")
 //   evergreen with no ends_at → blank   (the 🌲 Ongoing badge says it all)
 //
@@ -507,6 +508,27 @@ function formatEventDateLabel(event: EventWithExtras): string {
     }
     return ""; // the "Ongoing" badge carries the meaning
   }
+
+  // A multi-day run that has already opened. The window deliberately keeps
+  // these — a play mid-run is on tonight whether or not it opened last week —
+  // but labelling it with its opening date makes a live listing look stale.
+  // What matters once it has started is how long it has left.
+  if (event.ends_at) {
+    const starts = new Date(event.starts_at);
+    const ends = new Date(event.ends_at);
+    const now = new Date();
+    const startedAlready = starts.getTime() < now.setHours(0, 0, 0, 0);
+    const stillRunning = ends.getTime() >= Date.now();
+    // Same-day events are not runs, however they are timed.
+    const spansDays = starts.toDateString() !== ends.toDateString();
+    if (startedAlready && stillRunning && spansDays) {
+      return `Through ${ends.toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+      })}`;
+    }
+  }
+
   // An invented time reads as fact; an absent one reads as absent. When the
   // source published only a date, show only the date.
   return new Date(event.starts_at).toLocaleString("en-US", {
