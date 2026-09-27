@@ -48,25 +48,39 @@ export default function SourcesPage() {
         <h1 className="font-title text-3xl md:text-4xl tracking-tight text-slate-900 leading-none mt-4">
           Where this comes from
         </h1>
-        <p className="text-sm text-slate-600 mt-3 max-w-2xl leading-relaxed">
-          Every event here is pulled from a public calendar somewhere else. This page
-          lists each one, when it was last updated, and how far ahead it has published
-          — so you can judge for yourself whether a quiet week is really quiet.
-        </p>
+        <div className="text-sm text-slate-600 mt-3 max-w-2xl leading-relaxed space-y-3">
+          <p>
+            Every event here is pulled from a public calendar online. This page lists
+            the sources, when it was last updated, and how far ahead it has published
+            — so you can judge for yourself whether a quiet week is really quiet.
+          </p>
+          <p>
+            Coverage is not uniform across time. Big venues publish months ahead; city
+            parks, breweries and neighborhood markets publish a rolling three or four
+            weeks and no further. So the next month is close to complete, and anything
+            past roughly two months out is major venues only — not because nothing is
+            happening, but because nobody has posted it yet.
+          </p>
+          <p>
+            Wavelength is made with love in Jacksonville, FL. Spotted an event that
+            looks wrong, or know a calendar that should be on this list?{" "}
+            <a
+              href="https://github.com/starryeyez024/jax-events/issues"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline decoration-slate-300 underline-offset-4 hover:text-slate-900 transition"
+            >
+              Open an issue on GitHub
+            </a>
+            .
+          </p>
+          {generatedAt && (
+            <p className="text-slate-500">
+              This site was last updated {formatDate(generatedAt)} ({relative(generatedAt)}).
+            </p>
+          )}
+        </div>
       </header>
-
-      <section className="mb-8 rounded-lg border border-slate-200 bg-white/70 backdrop-blur p-5">
-        <h2 className="font-display font-semibold text-slate-900 text-sm mb-2">
-          The short version
-        </h2>
-        <p className="text-sm text-slate-600 leading-relaxed">
-          Coverage is not uniform across time. Big venues publish months ahead; city
-          parks, breweries and neighborhood markets publish a rolling three or four
-          weeks and no further. So the next month is close to complete, and anything
-          past roughly two months out is major venues only — not because nothing is
-          happening, but because nobody has posted it yet.
-        </p>
-      </section>
 
       {loading && <p className="text-sm text-slate-500">Loading…</p>}
 
@@ -81,43 +95,6 @@ export default function SourcesPage() {
       {!loading && listed.length === 0 && (
         <p className="text-sm text-slate-500">No sources to show yet.</p>
       )}
-
-      {generatedAt && (
-        <p className="text-sm text-slate-500 mt-8">
-          This page was generated {formatDate(generatedAt)} ({relative(generatedAt)}).
-        </p>
-      )}
-
-      {/* Sits under the source list on purpose: someone reading this page is
-          already checking the app's working, so it is the right moment to
-          offer somewhere to say when it isn't. */}
-      <footer className="mt-10 pt-6 border-t border-slate-200 text-sm text-slate-600 leading-relaxed max-w-2xl">
-        <p>
-          Made with love in Jacksonville, FL. Wavelength is{" "}
-          <a
-            href="https://github.com/starryeyez024/jax-events"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline decoration-slate-300 underline-offset-4 hover:text-slate-900 transition"
-          >
-            open source
-          </a>
-          .
-        </p>
-        <p className="mt-2">
-          Spotted an event that looks wrong, or know a calendar that should be
-          on this list?{" "}
-          <a
-            href="https://github.com/starryeyez024/jax-events/issues"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline decoration-slate-300 underline-offset-4 hover:text-slate-900 transition"
-          >
-            Open an issue
-          </a>{" "}
-          and it'll get looked at.
-        </p>
-      </footer>
     </div>
   );
 }
@@ -128,8 +105,8 @@ function SourceRow({ s }: { s: SourceStatus }) {
   return (
     <li className="rounded-lg border border-slate-200 bg-white/70 backdrop-blur p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        {/* Also h2: these rows are not subsections of "The short version",
-            which is the only h2 above them. */}
+        {/* h2, not h3: these rows are top-level content under the page h1 —
+            there is no heading between them and it. */}
         <h2 className="font-display font-semibold text-slate-900 text-lg">
           {s.url ? (
             <a

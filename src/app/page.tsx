@@ -369,7 +369,11 @@ export default function Home() {
                 ) : (
                   <>
                     {events.length}{" "}
-                    <span className="text-slate-400 text-xl font-normal">
+                    {/* One size for the whole sentence — "events" used to be a
+                        step larger than the clause after it, so the line read
+                        as two fragments rather than one. The count keeps its
+                        own size; it is the number, not part of the prose. */}
+                    <span className="text-slate-400 text-base font-normal">
                       event{events.length === 1 ? "" : "s"}
                       {/* Describes how far the DATA reaches, not the current
                           filters. Past this date the listings are mostly big
@@ -377,10 +381,17 @@ export default function Home() {
                           the smaller calendars have not posted yet. */}
                       {formatCoverage(coverage) && (
                         <span
-                          className="hidden sm:inline text-base"
+                          className="hidden sm:inline"
                           title={`At least ${MIN_SOURCES} sources are still publishing events up to this date. Beyond it, listings come mainly from large venues.`}
                         >
-                          , sourced through {formatCoverage(coverage)}. Updated weekly.
+                          ,{" "}
+                          <Link
+                            href="/sources"
+                            className="underline decoration-slate-300 underline-offset-4 hover:text-slate-700 transition"
+                          >
+                            sourced
+                          </Link>{" "}
+                          through {formatCoverage(coverage)}. Updated weekly.
                         </span>
                       )}
                     </span>
