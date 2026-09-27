@@ -83,10 +83,41 @@ export default function SourcesPage() {
       )}
 
       {generatedAt && (
-        <p className="text-xs text-slate-500 mt-8">
+        <p className="text-sm text-slate-500 mt-8">
           This page was generated {formatDate(generatedAt)} ({relative(generatedAt)}).
         </p>
       )}
+
+      {/* Sits under the source list on purpose: someone reading this page is
+          already checking the app's working, so it is the right moment to
+          offer somewhere to say when it isn't. */}
+      <footer className="mt-10 pt-6 border-t border-slate-200 text-sm text-slate-600 leading-relaxed max-w-2xl">
+        <p>
+          Made with love in Jacksonville, FL. Wavelength is{" "}
+          <a
+            href="https://github.com/starryeyez024/jax-events"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline decoration-slate-300 underline-offset-4 hover:text-slate-900 transition"
+          >
+            open source
+          </a>
+          .
+        </p>
+        <p className="mt-2">
+          Spotted an event that looks wrong, or know a calendar that should be
+          on this list?{" "}
+          <a
+            href="https://github.com/starryeyez024/jax-events/issues"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline decoration-slate-300 underline-offset-4 hover:text-slate-900 transition"
+          >
+            Open an issue
+          </a>{" "}
+          and it'll get looked at.
+        </p>
+      </footer>
     </div>
   );
 }
