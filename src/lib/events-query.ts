@@ -96,7 +96,11 @@ export function queryEvents(db: Database.Database, filters: EventFilters): Event
     where.push("r.registered = 1");
   }
   if (filters.search) {
-    where.push("(e.title LIKE @search OR e.description LIKE @search)");
+    // Mirrors the venue-inclusive haystack in filter-events.ts — these two
+    // predicates must agree or local and published search disagree.
+    where.push(
+      "(e.title LIKE @search OR e.description LIKE @search OR e.venue_name LIKE @search)"
+    );
     params.search = `%${filters.search}%`;
   }
   if (filters.noCategories) {

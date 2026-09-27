@@ -208,8 +208,8 @@ export function Filters({
       >
 
         <input
-          className="w-full px-4 py-2 border border-slate-200 rounded-full text-sm bg-sand-50 focus:outline-none focus:bg-white focus:border-slate-300 transition placeholder:text-slate-400"
-          placeholder="Search title or description…"
+          className="w-full px-4 py-2 border border-slate-200 rounded-full text-sm bg-sand-50 focus:outline-none focus:bg-white focus:border-slate-300 transition placeholder:text-slate-500"
+          placeholder="Search events, venues…"
           value={value.search}
           onChange={(e) => onChange({ ...value, search: e.target.value })}
         />

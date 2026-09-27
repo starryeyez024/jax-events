@@ -61,7 +61,13 @@ export function filterEvents(
     if (f.includeRecurring === false && e.is_recurring !== 0) return false;
 
     if (search) {
-      const hay = `${e.title ?? ""} ${e.description ?? ""}`.toLowerCase();
+      // Venue is included deliberately: most events at a given place never
+      // name it in their title or description, so searching "kava" used to
+      // return the one run club whose blurb mentions it and hide the 140
+      // events actually held there. City is NOT searched — nearly every row
+      // is in Jacksonville, so it matches everything and filters nothing.
+      const hay =
+        `${e.title ?? ""} ${e.description ?? ""} ${e.venue_name ?? ""}`.toLowerCase();
       if (!hay.includes(search)) return false;
     }
 
