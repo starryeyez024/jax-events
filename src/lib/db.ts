@@ -5,6 +5,7 @@ import { CATEGORIES, DEFAULT_WEIGHTS, type Category } from "./categories";
 import { metaForSource, type SourceStatus } from "./sources";
 import { MIN_SOURCES } from "./coverage";
 import { isProceduralMeeting } from "./non-events";
+import { subjectTags } from "./subject-tags";
 import type { DistanceBucket } from "./distance";
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -306,9 +307,17 @@ export function upsertEvent(db: Database.Database, e: EventInput): string {
   // event's categories, so a procedural meeting that also carried
   // "uncategorized" would survive unchecking the Govt Meetings chip — the
   // chip has to be the event's only category for it to actually filter.
-  const cats = isProceduralMeeting(e.title)
-    ? new Set<Category>(["govt-meeting"])
-    : new Set<Category>(e.categories);
+  let cats: Set<Category>;
+  if (isProceduralMeeting(e.title)) {
+    cats = new Set<Category>(["govt-meeting"]);
+  } else {
+    cats = new Set<Category>(e.categories);
+    for (const c of subjectTags(e.title, e.description)) cats.add(c);
+    // "uncategorized" asserts nothing is known about the event. Once a rule
+    // above has established a subject that is no longer true, and leaving it
+    // in would keep a tagged Jags game showing under the Uncategorized chip.
+    if (cats.size > 1) cats.delete("uncategorized");
+  }
   for (const c of cats) insCat.run(id, c);
 
   return id;
