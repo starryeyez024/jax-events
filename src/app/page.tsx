@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { EventWithExtras } from "@/lib/db";
 import { EventCard } from "@/components/EventCard";
@@ -58,19 +58,19 @@ const DEFAULT_FILTERS: FilterState = {
   // exactly the failure mode the /sources page exists to prevent.
   maxDistance: READ_ONLY ? "far" : "nearby",
   from: todayIso(),
-  to: plusDaysIso(7),
+  // 30 days. The listings run further — the "sourced through" note says how
+  // much further — but opening on the whole range was a five-times-longer
+  // page than anyone needs to answer "what's on".
+  to: plusDaysIso(30),
 };
 
 export default function Home() {
   // Public read-only mode has no visible match score, so default to a plain
   // chronological list.
-  // Held in state rather than memoised, because the end date adopts the
-  // coverage date once that is known. Keeping `defaults` in step means the
-  // adopted value still counts as default and stays out of shared URLs.
-  const [defaults, setDefaults] = useState<Defaults>(() => ({
-    filters: DEFAULT_FILTERS,
-    sort: READ_ONLY ? "chrono" : "match",
-  }));
+  const defaults: Defaults = useMemo(
+    () => ({ filters: DEFAULT_FILTERS, sort: READ_ONLY ? "chrono" : "match" }),
+    []
+  );
 
   const [view, setView] = useState<"list" | "calendar">("list");
   const [sort, setSort] = useState<SortMode>(defaults.sort);
@@ -81,7 +81,6 @@ export default function Home() {
   // render would immediately overwrite an incoming shared link with defaults.
   const [hydrated, setHydrated] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const toWasExplicit = useRef(false);
 
   // Decide the panel's opening state after mount.
   //
@@ -127,8 +126,6 @@ export default function Home() {
   // useSearchParams keeps this component out of Next's Suspense requirement
   // for static rendering, which the read-only export depends on.
   useEffect(() => {
-    // A link that names its own end date must win over the coverage default.
-    toWasExplicit.current = new URLSearchParams(window.location.search).has("to");
     const { state } = decodeViewState(window.location.search, defaults);
     setFilters(state.filters);
     setView(state.view);
@@ -261,18 +258,6 @@ export default function Home() {
   useEffect(() => {
     load();
   }, [query]);
-
-  // Default the window to end where the data does. Runs once coverage is
-  // known, and only while the range is still untouched — a link that pinned
-  // `to`, or a date the user has since edited, is left alone.
-  useEffect(() => {
-    if (!coverage || toWasExplicit.current) return;
-    setDefaults((d) =>
-      d.filters.to === coverage ? d : { ...d, filters: { ...d.filters, to: coverage } }
-    );
-    setFilters((f) => (f.to === DEFAULT_FILTERS.to ? { ...f, to: coverage } : f));
-  }, [coverage]);
-
   async function refreshScrapers() {
     setRefreshing(true);
     setRefreshReport(null);
