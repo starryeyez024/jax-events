@@ -39,6 +39,13 @@ export const SOURCE_META: Record<string, SourceMeta> = {
     covers: "Atlantic Beach civic calendar — commission meetings, park yoga, tai chi, markets.",
     kind: "scraper",
   },
+  "jacksonville-mom": {
+    label: "Jacksonville Mom (First Wednesday Art Walk)",
+    url: "https://jacksonvillemom.com/events/",
+    covers:
+      "Only the monthly First Wednesday Art Walk in Downtown Jacksonville, which Visit Jacksonville and dtjax.com don't expose to scrapers.",
+    kind: "scraper",
+  },
   cummer: {
     label: "Cummer Museum of Art & Gardens",
     url: "https://www.cummermuseum.org/events/",

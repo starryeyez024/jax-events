@@ -21,6 +21,7 @@ import { fetchEventbrite } from "../src/scrapers/eventbrite";
 import { fetchBoldCitySwing } from "../src/scrapers/bold-city-swing";
 import { fetchKavaAndCompany } from "../src/scrapers/kava-and-company";
 import { fetchJaxBusinessCalendar } from "../src/scrapers/jax-business-calendar";
+import { fetchJacksonvilleMom } from "../src/scrapers/jacksonville-mom";
 
 type SourceFn = () => Promise<EventInput[]>;
 
@@ -37,6 +38,7 @@ const SOURCES: Record<string, SourceFn> = {
   "bold-city-swing": fetchBoldCitySwing,
   "kava-and-company": fetchKavaAndCompany,
   "jax-business-calendar": fetchJaxBusinessCalendar,
+  "jacksonville-mom": fetchJacksonvilleMom,
 };
 
 async function main() {
